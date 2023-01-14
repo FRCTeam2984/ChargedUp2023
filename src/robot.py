@@ -1,4 +1,4 @@
-import wpilib
+import wpilib, rev, ctre
 
 class MyRobot(wpilib.TimedRobot):
 
