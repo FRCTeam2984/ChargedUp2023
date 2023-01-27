@@ -24,7 +24,7 @@ class Drive:
       self.MIDDLE_WHEEL_SPEED = 3
 
 
-   # set the speed of the wheels on the left of the robot
+   # set the speed of the wheels on the left of the robot and includes the middle wheels
    def setLeftSpeed(self, speed):
       # clamp the speed from -1 to 1
       speed = math_functions.clamp(speed, -1, 1)
@@ -34,7 +34,7 @@ class Drive:
       self.middleRight.setVoltage(self.MIDDLE_WHEEL_SPEED)
 
 
-   # set the speed of the wheels on the right of the robot
+   # set the speed of the wheels on the right of the robot and includes the middle wheels
    def setRightSpeed(self, speed):
       # clamp the speed from -1 to 1
       speed = math.functions.clamp(speed, -1, 1)
@@ -47,6 +47,33 @@ class Drive:
    def setSpeed(self, speed):
       self.setLeftSpeed(speed)
       self.setRightSpeed(speed)
+
+   
+   def arcadeDrive(self, x, y):
+      pass
+
+
+   def tankDrive(self, joystick_left, joystick_right):
+      self.setLeftSpeed(joystick_left)
+      self.setRightSpeed(joystick_right)
+
+
+   def mecanumDrive(self, joystick_x, joystick_y):
+      frontLeftSpeed = joystick_y + joystick_x
+      frontRightSpeed = joystick_y - joystick_x
+      backRightSpeed = frontLeftSpeed
+      backLeftSpeed = frontRightSpeed
+
+      steer = 0
+      frontLeftSpeed -= steer
+      frontRightSpeed += steer
+      backLeftSpeed -= steer
+      backRightSpeed += steer
+
+      self.frontLeft.setSpeed(frontLeftSpeed)
+      self.frontRight.setSpeed(frontRightSpeed)
+      self.backLeft.setSpeed(backLeftSpeed)
+      self.backRight.setSpeed(backRightSpeed)
 
 
    # Actual driving mode functions

@@ -1,6 +1,7 @@
 import wpilib, rev, ctre
-from utils import math_functions, constants
 import math
+
+from utils import math_functions, constants
 
 class MyRobot(wpilib.TimedRobot): 
 
@@ -17,6 +18,10 @@ class MyRobot(wpilib.TimedRobot):
       self.middleRight = rev.CANSparkMax(constants.ID_DRIVE_MIDDLE_RIGHT)
       self.middleLeft = rev.CANSparkMax(constants.ID_DRIVE_MIDDLE_LEFT)
 
+      # Motors and servos that control arm
+      self.arm_elevator_motor = rev.CANSparkMax(constants.ID_ARM_ELEVATOR)
+      self.arm_chain_motor = rev.CANSparkMax(constants.ID_ARM_CHAIN)
+      self.arm_end_servo = wpilib.Servo(constants.ID_ARM_SERVO)
 
 
    def autonomoutInit(self):
@@ -28,6 +33,7 @@ class MyRobot(wpilib.TimedRobot):
 
    def teleopPeriodic(self):
       pass
+
 
 if __name__ == "__main__":
    wpilib.run(MyRobot)
