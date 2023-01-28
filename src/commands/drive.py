@@ -11,69 +11,69 @@ class Drive:
    def __init__(self, _frontLeft : WPI_TalonFX, _frontRight : WPI_TalonFX, _middleLeft : CANSparkMax, _middleRight : CANSparkMax, _backLeft : WPI_TalonFX, _backRight : WPI_TalonFX):
       
       # Front and back mecanum wheels are powered Falcon500 motors
-      self.frontLeft = _frontLeft
-      self.frontRight = _frontRight
-      self.backLeft = _backLeft
-      self.backRight = _backRight
+      self.front_left = _frontLeft
+      self.front_right = _frontRight
+      self.back_left = _backLeft
+      self.back_right = _backRight
 
       # Middle omni wheels are powered by Neo550 motors
-      self.middleRight = _middleRight
-      self.middleLeft = _middleLeft
+      self.middle_right = _middleRight
+      self.middle_left = _middleLeft
 
       # Constant wheel speed/voltages
       self.MIDDLE_WHEEL_SPEED = 3
 
 
    # set the speed of the wheels on the left of the robot and includes the middle wheels
-   def setLeftSpeed(self, speed):
+   def set_left_speed(self, speed):
       # clamp the speed from -1 to 1
       speed = math_functions.clamp(speed, -1, 1)
 
-      self.frontLeft.set(speed)
-      self.backLeft.set(speed)
-      self.middleRight.setVoltage(self.MIDDLE_WHEEL_SPEED)
+      self.front_left.set(speed)
+      self.back_left.set(speed)
+      self.middle_right.setVoltage(self.MIDDLE_WHEEL_SPEED)
 
 
    # set the speed of the wheels on the right of the robot and includes the middle wheels
-   def setRightSpeed(self, speed):
+   def set_right_speed(self, speed):
       # clamp the speed from -1 to 1
       speed = math.functions.clamp(speed, -1, 1)
 
-      self.frontRight.set(speed)
-      self.backRight.set(speed)
-      self.middleRight.setVoltage(self.MIDDLE_WHEEL_SPEED)
+      self.front_right.set(speed)
+      self.back_right.set(speed)
+      self.middle_right.setVoltage(self.MIDDLE_WHEEL_SPEED)
 
 
-   def setSpeed(self, speed):
-      self.setLeftSpeed(speed)
-      self.setRightSpeed(speed)
+   def set_speed(self, speed):
+      self.set_left_speed(speed)
+      self.set_right_speed(speed)
 
    
-   def arcadeDrive(self, x, y):
+   def arcade_drive(self, x, y):
       pass
 
 
-   def tankDrive(self, joystick_left, joystick_right):
-      self.setLeftSpeed(joystick_left)
-      self.setRightSpeed(joystick_right)
+   def tank_drive(self, joystick_left, joystick_right):
+      self.set_left_speed(joystick_left)
+      self.set_right_speed(joystick_right)
 
 
-   def mecanumDrive(self, joystick_x, joystick_y):
-      frontLeftSpeed = joystick_y + joystick_x
-      frontRightSpeed = joystick_y - joystick_x
-      backRightSpeed = frontLeftSpeed
-      backLeftSpeed = frontRightSpeed
+   def mecanum_drive(self, joystick_x, joystick_y):
+      front_left_speed = joystick_y + joystick_x
+      front_right_speed = joystick_y - joystick_x
+      back_right_speed = front_left_speed
+      back_left_speed = front_right_speed
 
       steer = 0
-      frontLeftSpeed -= steer
-      frontRightSpeed += steer
-      backLeftSpeed -= steer
-      backRightSpeed += steer
+      front_left_speed -= steer
+      front_right_speed += steer
+      back_left_speed -= steer
+      back_right_speed += steer
 
-      self.frontLeft.setSpeed(frontLeftSpeed)
-      self.frontRight.setSpeed(frontRightSpeed)
-      self.backLeft.setSpeed(backLeftSpeed)
-      self.backRight.setSpeed(backRightSpeed)
+      self.frontLeft.setSpeed(front_left_speed)
+      self.frontRight.setSpeed(front_right_speed)
+      self.backLeft.setSpeed(back_left_speed)
+      self.backRight.setSpeed(back_right_speed)
 
 
    # Actual driving mode functions
