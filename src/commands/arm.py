@@ -22,6 +22,10 @@ class Arm:
       speed = math_functions.clamp(speed, 1, -1)
       self.arm_elevator_motor.set(speed)
 
-   def lower_elevator(self):
+   def lower_elevator(self, speed):
       speed = math_functions.clamp(speed, 1, -1)
       self.arm_elevator_motor.set(speed)
+
+   def move_chain(self, speed):
+      speed = math_functions.clamp(-1, 1)
+      self.arm_chain_motor.set(speed)
