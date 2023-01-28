@@ -2,6 +2,7 @@ import wpilib, rev, ctre
 import math
 
 from utils import math_functions, constants
+from commands import networking
 
 class MyRobot(wpilib.TimedRobot): 
 
@@ -26,6 +27,8 @@ class MyRobot(wpilib.TimedRobot):
       self.joystick = wpilib.interfacs.GenericHID(constants.ID_CONTROLLER)
 
       self.AUTO_MODE = 0
+
+      self.network_receiver = networking.NetworkReciever()
 
 
    def autonomoutInit(self):
