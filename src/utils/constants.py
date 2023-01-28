@@ -1,7 +1,14 @@
-# CONSTANTS
-
 # change number of mode later
 AUTO_MODE = 0
+
+
+# stages of autonomous can change later
+IDLE = 0
+PLACING_PIECE = 1
+MOVING_OUT_COMMUNITY = 2
+TURNING = 3
+BALANCING = 4
+DONE = 5
 
 
 #IDs for motors/physical components

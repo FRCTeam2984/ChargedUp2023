@@ -7,11 +7,11 @@ class Imutil(PigeonIMU):
    def __init__(self, _parent_motor : WPI_TalonSRX):
       super().__init__(_parent_motor)
 
-   def getYaw(self):
+   def get_yaw(self):
       return self.getYawPitchRoll()[0]
 
-   def getPitch(self):
+   def get_pitch(self):
       return self.getYawPitchRoll()[1]
 
-   def getRoll(self):
+   def get_roll(self):
       return self.getYawPitchRoll()[2]
