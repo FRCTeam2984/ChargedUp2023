@@ -2,7 +2,7 @@ import wpilib, rev, ctre
 import math
 
 from utils import math_functions, constants
-from commands import networking
+from commands import networking, rotary_controller
 
 class MyRobot(wpilib.TimedRobot): 
 
@@ -24,9 +24,12 @@ class MyRobot(wpilib.TimedRobot):
       self.arm_chain_motor = rev.CANSparkMax(constants.ID_ARM_CHAIN)
       self.arm_end_servo = wpilib.Servo(constants.ID_ARM_SERVO)
 
-      self.joystick = wpilib.interfacs.GenericHID(constants.ID_CONTROLLER)
-
-      self.AUTO_MODE = 0
+      # operator controller with buttons for features of robot
+      self.operator_controller = wpilib.interfacs.GenericHID(constants.ID_CONTROLLER)
+      
+      # drive controller and rotary controller for driving and turning the robot
+      self.drive_controller = wpilib.XboxController(constants.ID_CONTROLLER)
+      self.rotary_controller = rotary_controller.RotaryJoystick(constants.ID_CONTROLLER)
 
       self.network_receiver = networking.NetworkReciever()
 
@@ -81,7 +84,15 @@ class MyRobot(wpilib.TimedRobot):
 
    def teleopPeriodic(self):
       try:
-         pass
+         # check if each part of the robot is enabled or not before checking if buttons pressed, etc.
+         if constants.ENABLE_DRIVING:
+            pass
+
+         if constants.ENABLE_ARM:
+            pass
+
+         if constants.ENABLE_BALANCE:
+            pass
 
       except:
          raise

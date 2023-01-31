@@ -1,6 +1,10 @@
-# change number of mode later
-AUTO_MODE = 0
+# Enable/disable feature
+ENABLE_DRIVING = True
+ENABLE_ARM = True
+ENABLE_BALANCE = True
 
+# mode of autonomous can change/develop later
+AUTO_MODE = 0
 
 # stages of autonomous can change later
 IDLE = 0
