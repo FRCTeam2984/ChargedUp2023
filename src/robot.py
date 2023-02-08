@@ -2,14 +2,14 @@ import wpilib, rev, ctre
 import math
 
 from utils import math_functions, constants
-from commands import networking, rotary_controller
+from commands import networking, rotary_controller, drive
 
 class MyRobot(wpilib.TimedRobot): 
 
    def robotInit(self):
       self.timer = wpilib.Timer()
 
-      # Front and back mecanum wheels are powered Falcon500 motors
+      # Front and back mecanum wheels are powered Falcon500 motors and drive class instance
       self.front_left = ctre.WPI_TalonFX(constants.ID_DRIVE_FRONT_LEFT)
       self.front_right = ctre.WPI_TalonFX(constants.ID_DRIVE_FRONT_RIGHT)
       self.back_left = ctre.WPI_TalonFX(constants.ID_DRIVE_BACK_LEFT)
@@ -18,6 +18,9 @@ class MyRobot(wpilib.TimedRobot):
       # Middle omni wheels are powered by Neo550 motors
       self.middle_right = rev.CANSparkMax(constants.ID_DRIVE_MIDDLE_RIGHT)
       self.middle_left = rev.CANSparkMax(constants.ID_DRIVE_MIDDLE_LEFT)
+
+      # Drive class instance
+      self.drive = drive.Drive(self.front_left, self.front_right, self.middle_left, self.middle_right, self.back_left, self.back_right)
 
       # Motors and servos that control arm
       self.arm_elevator_motor = rev.CANSparkMax(constants.ID_ARM_ELEVATOR)
@@ -41,6 +44,7 @@ class MyRobot(wpilib.TimedRobot):
       self.auto_stage = 0
 
    def autonomousPeriodic(self):
+      # replace numbers with constants from constants.py file
       if self.AUTO_MODE == 0:
          if self.auto_stage == 0:
             pass
