@@ -31,7 +31,7 @@ class Drive:
 
       self.front_left.set(speed)
       self.back_left.set(speed)
-      self.middle_right.setVoltage(self.MIDDLE_WHEEL_SPEED)
+      #self.middle_right.setVoltage(self.MIDDLE_WHEEL_SPEED)
 
 
    # set the speed of the wheels on the right of the robot and includes the middle wheels
@@ -41,7 +41,7 @@ class Drive:
 
       self.front_right.set(speed)
       self.back_right.set(speed)
-      self.middle_right.setVoltage(self.MIDDLE_WHEEL_SPEED)
+      #self.middle_right.setVoltage(self.MIDDLE_WHEEL_SPEED)
 
 
    def set_speed(self, speed):
@@ -49,6 +49,7 @@ class Drive:
       self.set_right_speed(speed)
 
    
+   # Actual driving functions
    def arcade_drive(self, x, y):
       pass
 
@@ -70,11 +71,16 @@ class Drive:
       back_left_speed -= steer
       back_right_speed += steer
 
-      self.frontLeft.setSpeed(front_left_speed)
-      self.frontRight.setSpeed(front_right_speed)
-      self.backLeft.setSpeed(back_left_speed)
-      self.backRight.setSpeed(back_right_speed)
+      # set middle wheel speeds to the average speed of the wheels on the respective sides
+      # utilizes the additional power that the middle wheels offer without interfering with mecanum drive (hopefully)
+      # might need to round down the avg values or set them to zero if they are in a small range close to 0
+      middle_left_speed = (front_left_speed + back_left_speed) / 2
+      middle_right_speed = (front_right_speed + back_right_speed) / 2
 
+      self.front_left.setSpeed(front_left_speed)
+      self.middle_left.setSpeed(middle_left_speed)
+      self.back_left.setSpeed(back_left_speed)
 
-   # Actual driving mode functions
-   
+      self.front_right.setSpeed(front_right_speed)
+      self.middle_right.setSpeed(middle_right_speed)
+      self.back_right.setSpeed(back_right_speed)
