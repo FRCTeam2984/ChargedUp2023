@@ -14,6 +14,8 @@ class Arm:
       self.arm_end_servo_1 = _arm_end_servo_1
       self.arm_end_servo_2 = _arm_end_servo_2
 
+      self.arm_top_limit_switch = None
+      self.arm_bottom_limit_switch = None
 
    def set_servo_1_angle(self, angle):
       clamped_angle = math_functions.clamp(angle, 0, 360)
@@ -23,18 +25,37 @@ class Arm:
       clamped_angle = math_functions.clamped(angle, 0, 360)
       self.arm_end_servo_2.setAngle(clamped_angle)
 
-   def raise_elevator(self, speed):
+   def set_elevator_speed(self, speed):
       clamped_speed = math_functions.clamp(speed, 1, -1)
       self.arm_elevator_motor.set(clamped_speed)
 
-   def lower_elevator(self, speed):
-      clamped_speed = math_functions.clamp(speed, 1, -1)
-      self.arm_elevator_motor.set(clamped_speed)
-
-   def move_chain(self, speed):
+   def set_base_speed(self, speed):
       clamped_speed = math_functions.clamp(speed, -1, 1)
-      self.arm_chain_motor.set(clamped_speed)
-
+      self.arm_base_motor.set(clamped_speed)
 
    def position_home(self):
+      self.set_servo_1_angle(0)
+      self.set_servo_2_angle(0)
+      # figure out later where the motors need to spin to put the robot back to the "home" position
+
+   def position_ground(self):
+      pass
+
+   def position_cube_one(self):
+      pass
+
+   def position_cube_two(self):
+      pass
+
+   def position_cone_one(self):
+      pass
+
+   def position_cone_two(self):
+      pass
+   
+   def calibration(self):
+      # move motor down until the bottom limit switch is clicked
+      # set the ground position to zero
+      # move up one revolution at a time until the top limit switch is clicked
+      # justify values to get a percent-based system by dividing the total number of revolutions by itself and multiply by 100
       pass

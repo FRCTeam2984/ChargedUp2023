@@ -1,8 +1,13 @@
 import wpilib, rev, ctre
 import math
 
-from utils import math_functions, constants
-from commands import networking, rotary_controller, drive
+from utils import math_functions, constants, imutil, pid
+from commands import networking, rotary_controller, drive, arm
+
+"""
+NOTE:
+BRING EXTRA VRM CABLES TO COMPETITION IN CASE OF SATEFY INSPECTION IDK ASK GREG
+"""
 
 class MyRobot(wpilib.TimedRobot): 
 
@@ -22,10 +27,19 @@ class MyRobot(wpilib.TimedRobot):
       # Drive class instance
       self.drive = drive.Drive(self.front_left, self.front_right, self.middle_left, self.middle_right, self.back_left, self.back_right)
 
+      # imu and pid stuff to be added below
+      # fix the drive imu later need to figure out what to use as the parent motor
+      self.drive_imu = None
+      self.pid = pid.PID()
+
       # Motors and servos that control arm
       self.arm_elevator_motor = rev.CANSparkMax(constants.ID_ARM_ELEVATOR)
-      self.arm_chain_motor = rev.CANSparkMax(constants.ID_ARM_CHAIN)
-      self.arm_end_servo = wpilib.Servo(constants.ID_ARM_SERVO)
+      self.arm_base_motor = rev.CANSparkMax(constants.ID_ARM_CHAIN)
+      self.arm_end_servo_1 = wpilib.Servo(constants.ID_ARM_SERVO_1)
+      self.arm_end_servo_2 = wpilib.Servo(constants.ID_ARM_SERVO_2)
+
+      # Arm class instance
+      self.arm = arm.Arm(self.arm_elevator_motor, self.arm_base_motor, self.arm_end_servo_1, self.arm_end_servo_2)
 
       # operator controller with buttons for features of robot
       self.operator_controller = wpilib.interfacs.GenericHID(constants.ID_CONTROLLER)
@@ -90,7 +104,12 @@ class MyRobot(wpilib.TimedRobot):
       try:
          # check if each part of the robot is enabled or not before checking if buttons pressed, etc.
          if constants.ENABLE_DRIVING:
-            pass
+            joystick_y = math_functions.interpolation(self.drive_controller.getRawAxis(1))
+            joystick_x = math_functions.interpolation(self.drive_controller.getRawAxis(0))
+            angle = self.rotary_controller.rotary_inputs()
+
+            self.drive.absolute_drive(joystick_y, joystick_x, angle, constants.DRIVE_MOTOR_POWER_MULTIPLIER)
+
 
          if constants.ENABLE_ARM:
             pass

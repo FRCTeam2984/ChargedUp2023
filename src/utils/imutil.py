@@ -15,3 +15,10 @@ class Imutil(PigeonIMU):
 
    def get_roll(self):
       return self.getYawPitchRoll()[2]
+
+   def check_if_working(self):
+      if (self.getState() == PigeonIMU.PigeonState.Ready):
+         return True
+      
+      else:
+         return False
