@@ -6,6 +6,8 @@ from rev import CANSparkMax
 
 from utils import math_functions
 
+# maybe we need to use PID in arm control to get accurate positions and hold it there
+
 class Arm:
    def __init__(self, _arm_elevator_motor : CANSparkMax, _arm_base_motor : CANSparkMax, _arm_end_servo_1 : Servo, _arm_end_servo_2 : Servo):
       self.arm_elevator_motor = _arm_elevator_motor

@@ -50,12 +50,18 @@ class Drive:
 
 
    def stop_drive(self):
-      self.setSpeed(0, 0)
+      self.set_speed(0, 0)
 
-   
-   # Actual driving functions
-   def arcade_drive(self, x, y):
-      pass
+   def get_yaw(self):
+      return self.drive_imu.getYaw()
+
+   # DRIVE FUNCTIONS
+   def arcade_drive(self, joystick_x, joystick_y):
+      left_speed = (joystick_y - joystick_x) * constants.DRIVE_MOTOR_POWER_MULTIPLIER
+      right_speed = (joystick_y + joystick_x) * constants.DRIVE_MOTOR_POWER_MULTIPLIER
+
+      self.set_left_speed(left_speed)
+      self.set_right_speed
 
 
    def tank_drive(self, joystick_left, joystick_right):
@@ -83,13 +89,13 @@ class Drive:
       middle_left_speed = (front_left_speed + back_left_speed) / 2
       middle_right_speed = (front_right_speed + back_right_speed) / 2
 
-      self.front_left.setSpeed(front_left_speed)
-      self.middle_left.setSpeed(middle_left_speed)
-      self.back_left.setSpeed(back_left_speed)
+      self.front_left.set_speed(front_left_speed)
+      self.middle_left.set_speed(middle_left_speed)
+      self.back_left.set_speed(back_left_speed)
 
-      self.front_right.setSpeed(front_right_speed)
-      self.middle_right.setSpeed(middle_right_speed)
-      self.back_right.setSpeed(back_right_speed)
+      self.front_right.set_speed(front_right_speed)
+      self.middle_right.set_speed(middle_right_speed)
+      self.back_right.set_speed(back_right_speed)
 
 
    def absolute_drive(self, speed, left_right, desired_angle, multiplier):

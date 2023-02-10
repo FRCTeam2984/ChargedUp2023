@@ -7,6 +7,15 @@ from commands import networking, rotary_controller, drive, arm
 """
 NOTE:
 BRING EXTRA VRM CABLES TO COMPETITION IN CASE OF SATEFY INSPECTION IDK ASK GREG
+
+TO WORK ON TOMORROW (2/9) or other meetings:
+- modes of autonomous
+- joystick control leading into the correct mode of driving
+- figure out how to find position of arm without limit switch encoder complicated situation
+- understand/correct IMU and PID stuff
+- start going over the software planning document and seeing what is going to work/not work
+- state machine format for arm positions
+- generally, commands for balancing and moving arms, etc.
 """
 
 class MyRobot(wpilib.TimedRobot): 
@@ -28,8 +37,8 @@ class MyRobot(wpilib.TimedRobot):
       self.drive = drive.Drive(self.front_left, self.front_right, self.middle_left, self.middle_right, self.back_left, self.back_right)
 
       # imu and pid stuff to be added below
-      # fix the drive imu later need to figure out what to use as the parent motor
-      self.drive_imu = None
+      # using the middle left motor, even though the middle right one can be used too
+      self.drive_imu = imutil.PigeonIMU(self.middle_left)
       self.pid = pid.PID()
 
       # Motors and servos that control arm

@@ -1,10 +1,11 @@
 # IMU code copied from last year
 # worked well, so we might as well use it again
 
-from ctre import WPI_TalonSRX, PigeonIMU
+from ctre import PigeonIMU
+from rev import CANSparkMax
 
 class Imutil(PigeonIMU):
-   def __init__(self, _parent_motor : WPI_TalonSRX):
+   def __init__(self, _parent_motor : CANSparkMax):
       super().__init__(_parent_motor)
 
    def get_yaw(self):
