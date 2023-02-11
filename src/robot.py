@@ -8,9 +8,9 @@ from commands import networking, rotary_controller, drive, arm
 NOTE:
 BRING EXTRA VRM CABLES TO COMPETITION IN CASE OF SATEFY INSPECTION IDK ASK GREG
 
-TO WORK ON TOMORROW (2/9) or other meetings:
+TO DO FOR ANY MEETING:
 - modes of autonomous
-- joystick control leading into the correct mode of driving
+- just check the mode of driving is right and the code is polished
 - figure out how to find position of arm without limit switch encoder complicated situation
 - understand/correct IMU and PID stuff
 - start going over the software planning document and seeing what is going to work/not work

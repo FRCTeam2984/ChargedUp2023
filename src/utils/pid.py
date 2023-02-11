@@ -38,29 +38,42 @@ class PID:
 
          return power
 
-
-
 class NewPID:
-   def __init__(self, Kp, Ki, Kd):
-      self.Kp = Kp
-      self.Ki = Ki
-      self.Kd = Kd
-
-      self._proportional = 0
-      self._integral = 0
-      self._derivative = 0
+   def __init__(self):
+      self.Kp = 0
+      self.Ki = 0
+      self.Kd = 0
 
       self.previous_error = 0
 
+      # integral term approximated using summation. Just adding up the error at very small time intervals kinda like a Riemann Sum
+      self.integral_error = 0
+      
+      # change delta time to how often the drive function is called (how long it takes for one iteration of TeleopPeriodic)
+      self.delta_time = 0.01
+   
+   def evaluate(self, target_value, current_value):
+      # target_value is the desired angle when turning the robot, and current_value is the current yaw of the robot from the IMU
+      error =  target_value - current_value
 
-   def update(self, error):
-      self._proportional = error * self.Kp
+      proportional_term = self.Kp * error
+      
+      # we need to estimate the derivative term using differentials
+      difference = error - self.previous_error
+      derivative = difference / self.delta_time
+      derivative_term = self.Kd * derivative_term
 
-      self._integral += error
-      self._integral *= self.Ki
+      integral = error * self.delta_time
+      integral_term = self.Ki * integral
 
-      self._derivative = error - self.previous_error
-      self._derivative *= self.Kd
+      # add together the P, I, and D, values to get the adjustment we need to give to the motor
+      adjustment = proportional_term + derivative_term + integral_term
 
-      # this is so bad why is PID so complicated
-      # I have no idea how this works ahhhhhhhh
+      # set the previous error to the current error before the next iteration
+      self.previous_error = error
+
+      return adjustment
+
+
+
+
