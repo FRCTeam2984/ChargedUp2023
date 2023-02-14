@@ -2,7 +2,7 @@ import wpilib, rev, ctre
 import math
 
 from utils import math_functions, constants, imutil, pid
-from commands import networking, rotary_controller, drive, arm
+from commands import networking, rotary_controller, drive, arm, balance
 
 """
 NOTE:
@@ -33,6 +33,9 @@ class MyRobot(wpilib.TimedRobot):
       self.middle_right = rev.CANSparkMax(constants.ID_DRIVE_MIDDLE_RIGHT)
       self.middle_left = rev.CANSparkMax(constants.ID_DRIVE_MIDDLE_LEFT)
 
+      self.front_additional = ctre.WPI_TalonSRX(constants.ID_ADDITIONAL_FRONT)
+      self.back_additional = ctre.WPI_TalonSRX(constants.ID_ADDITIONAL_BACK)
+
       # Drive class instance
       self.drive = drive.Drive(self.front_left, self.front_right, self.middle_left, self.middle_right, self.back_left, self.back_right)
 
@@ -40,6 +43,10 @@ class MyRobot(wpilib.TimedRobot):
       # using the middle left motor, even though the middle right one can be used too
       self.drive_imu = imutil.PigeonIMU(self.middle_left)
       self.pid = pid.PID()
+
+
+      # Balance class instance
+      self.balance = balance.Balance(self.drive_imu, self.drive, self.front_additional, self.back_additional)
 
       # Motors and servos that control arm
       self.arm_elevator_motor = rev.CANSparkMax(constants.ID_ARM_ELEVATOR)
