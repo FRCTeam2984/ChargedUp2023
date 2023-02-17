@@ -19,6 +19,14 @@ class Arm:
       self.arm_top_limit_switch = None
       self.arm_bottom_limit_switch = None
 
+      self.HOME = 0
+      self.GROUND = 1
+      self.CUBE_ONE = 2
+      self.CONE_ONE = 3
+      self.CUBE_TWO = 4
+      self.CONE_TWO = 5
+      self.position = self.HOME
+
    def set_servo_1_angle(self, angle):
       clamped_angle = math_functions.clamp(angle, 0, 360)
       self.arm_end_servo_1.setAngle(clamped_angle)
@@ -35,25 +43,35 @@ class Arm:
       clamped_speed = math_functions.clamp(speed, -1, 1)
       self.arm_base_motor.set(clamped_speed)
 
+
+   def get_elevator_motor_encoder(self):
+      return self.arm_elevator_motor.getAbsoluteEncoder()
+   
+
+   def get_base_motor_encoder(self):
+      return self.arm_base_motor.getAbsoluteEncoder()
+
+
    def position_home(self):
       self.set_servo_1_angle(0)
       self.set_servo_2_angle(0)
       # figure out later where the motors need to spin to put the robot back to the "home" position
+      self.position = self.HOME
 
    def position_ground(self):
-      pass
+      self.position = self.GROUND
 
    def position_cube_one(self):
-      pass
+      self.position = self.CUBE_ONE
 
    def position_cube_two(self):
-      pass
+      self.position = self.CUBE_TWO
 
    def position_cone_one(self):
-      pass
+      self.position = self.CONE_ONE
 
    def position_cone_two(self):
-      pass
+      self.position = self.CONE_TWO
    
    def calibration(self):
       # move motor down until the bottom limit switch is clicked

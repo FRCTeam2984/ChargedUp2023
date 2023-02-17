@@ -50,7 +50,8 @@ class NewPID:
       self.integral_error = 0
       
       # change delta time to how often the drive function is called (how long it takes for one iteration of TeleopPeriodic)
-      self.delta_time = 0.01
+      # guessing 1 second / 50 iterations per second = 0.02 seconds per iteration = 20ms
+      self.delta_time = 0.02
    
    def evaluate(self, target_value, current_value):
       # target_value is the desired angle when turning the robot, and current_value is the current yaw of the robot from the IMU
@@ -61,7 +62,7 @@ class NewPID:
       # we need to estimate the derivative term using differentials
       difference = error - self.previous_error
       derivative = difference / self.delta_time
-      derivative_term = self.Kd * derivative_term
+      derivative_term = self.Kd * derivative
 
       integral = error * self.delta_time
       integral_term = self.Ki * integral
