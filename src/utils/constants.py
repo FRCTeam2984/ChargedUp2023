@@ -3,6 +3,21 @@ ENABLE_DRIVING = True
 ENABLE_ARM = True
 ENABLE_BALANCE = True
 
+# positions that a cone can be in
+NO_CONE = 0
+CONE_FACING_TOWARDS = 1
+CONE_FACING_AWAY = 2
+CONE_STANDING_UP = 3
+
+#positions the arm can be in for the cube (change when testing)
+CUBE_GROUND = 123
+CUBE_MID_HEIGHT = 456
+CUBE_TALL_HEIGHT = 789
+
+#positions the elevator can be in
+ELEVATOR_LOW = 0
+ELEVATOR_HIGH = 999
+
 # drive multipliers/power regulations
 DRIVE_MOTOR_POWER_MULTIPLIER = 2
 DRIVE_MIDDLE_WHEEL_SPEED = 3
@@ -33,6 +48,8 @@ ID_ARM_ELEVATOR = 6
 ID_ARM_CHAIN = 7
 ID_ARM_SERVO_1 = 8
 ID_ARM_SERVO_2 = 9
+ID_ARM_TOP_LIMIT_SWITCH = 0
+ID_ARM_BOTTOM_LIMIT_SWITCH = 1
 
 ID_ADDITIONAL_FRONT = 10
 ID_ADDITIONAL_BACK = 11

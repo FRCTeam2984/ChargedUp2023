@@ -10,7 +10,7 @@ class NetworkReciever:
       self.instance = ntcore.NetworkTableInstance.getDefault()
       self.dashboard = self.instance.getTable("SmartDashboard")
 
-   
+
    def find_cube(self):
       has_cube = self.dashboard.getBool("has_cube", False)
 

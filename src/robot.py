@@ -1,8 +1,9 @@
 import wpilib, rev, ctre
 import math
+from subsystems import arm, drive, networking, rotary_controller
 
 from utils import math_functions, constants, imutil, pid
-from commands import networking, rotary_controller, drive, arm, balance
+from commands import balance
 
 """
 NOTE:
@@ -10,10 +11,10 @@ BRING EXTRA VRM CABLES TO COMPETITION IN CASE OF SATEFY INSPECTION IDK ASK GREG
 
 TO DO FOR ANY MEETING:
 - modes of autonomous
+- create a subsystems folder and just organize the code
 - just check the mode of driving is right and the code is polished
 - figure out how to find position of arm without limit switch encoder complicated situation
-- understand/correct IMU and PID stuff
-- start going over the software planning document and seeing what is going to work/not work
+- polish the PID code (mainly the new stuff i wrote to understand it better)
 - state machine format for arm positions
 - generally, commands for balancing and moving arms, etc.
 """
@@ -53,6 +54,8 @@ class MyRobot(wpilib.TimedRobot):
       self.arm_base_motor = rev.CANSparkMax(constants.ID_ARM_CHAIN)
       self.arm_end_servo_1 = wpilib.Servo(constants.ID_ARM_SERVO_1)
       self.arm_end_servo_2 = wpilib.Servo(constants.ID_ARM_SERVO_2)
+      self.arm_top_limit_switch = wpilib.DigitalInput(constants.ID_ARM_TOP_LIMIT_SWITCH)
+      self.arm_bottom_limi_switch = wpilib.DigitalInput(constants.ID_ARM_BOTTOM_LIMIT_SWITCH)
 
       # Arm class instance
       self.arm = arm.Arm(self.arm_elevator_motor, self.arm_base_motor, self.arm_end_servo_1, self.arm_end_servo_2)
