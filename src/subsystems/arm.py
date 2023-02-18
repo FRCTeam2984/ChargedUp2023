@@ -5,7 +5,6 @@ from wpilib import Servo
 from rev import CANSparkMax
 
 from utils import math_functions
-
 # maybe we need to use PID in arm control to get accurate positions and hold it there
 
 class Arm:
@@ -15,9 +14,6 @@ class Arm:
 
       self.arm_end_servo_1 = _arm_end_servo_1
       self.arm_end_servo_2 = _arm_end_servo_2
-
-      self.arm_top_limit_switch = None
-      self.arm_bottom_limit_switch = None
 
       self.HOME = 0
       self.GROUND = 1
@@ -43,14 +39,11 @@ class Arm:
       clamped_speed = math_functions.clamp(speed, -1, 1)
       self.arm_base_motor.set(clamped_speed)
 
-
    def get_elevator_motor_encoder(self):
       return self.arm_elevator_motor.getAbsoluteEncoder()
-   
 
    def get_base_motor_encoder(self):
       return self.arm_base_motor.getAbsoluteEncoder()
-
 
    def position_home(self):
       self.set_servo_1_angle(0)

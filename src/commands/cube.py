@@ -39,12 +39,14 @@ class Cube:
          # if button_pressed and cube is seen and arm is in default postion
          if button_pressed and cube:
             self.state = self.TURNING
+
       elif self.state == self.TURNING: 
          if button_pressed and cube:   
             if self.turning():
                self.state = self.REACHING
          else:
             self.state = self.IDLE
+
       elif self.state == self.REACHING:
          if button_pressed and cube:
             if self.arm_rotate(constants.CUBE_GROUND):
@@ -52,18 +54,21 @@ class Cube:
                   self.state = self.DRIVING
          else:
             self.state = self.IDLE
+
       elif self.state == self.DRIVING:
          if button_pressed and cube:
             if self.driving():
                self.state = self.GRABBING
          else:
             self.state = self.IDLE
+
       elif self.state == self.GRABBING:
          if button_pressed:
             if self.grabbing():
                self.state = self.RETRIEVING
          else:
             self.state = self.IDLE
+            
       elif self.state == self.RETRIEVING:
          if button_pressed:
             if self.retrieving():
