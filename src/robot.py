@@ -11,8 +11,6 @@ BRING EXTRA VRM CABLES TO COMPETITION IN CASE OF SATEFY INSPECTION IDK ASK GREG
 
 TO DO FOR ANY MEETING:
 - modes of autonomous
-- create a subsystems folder and just organize the code
-- just check the mode of driving is right and the code is polished
 - figure out how to find position of arm without limit switch encoder complicated situation
 - polish the PID code (mainly the new stuff i wrote to understand it better)
 - state machine format for arm positions
@@ -20,7 +18,6 @@ TO DO FOR ANY MEETING:
 """
 
 class MyRobot(wpilib.TimedRobot): 
-
    def robotInit(self):
       self.timer = wpilib.Timer()
 
@@ -54,11 +51,9 @@ class MyRobot(wpilib.TimedRobot):
       self.arm_base_motor = rev.CANSparkMax(constants.ID_ARM_CHAIN)
       self.arm_end_servo_1 = wpilib.Servo(constants.ID_ARM_SERVO_1)
       self.arm_end_servo_2 = wpilib.Servo(constants.ID_ARM_SERVO_2)
-      self.arm_top_limit_switch = wpilib.DigitalInput(constants.ID_ARM_TOP_LIMIT_SWITCH)
-      self.arm_bottom_limi_switch = wpilib.DigitalInput(constants.ID_ARM_BOTTOM_LIMIT_SWITCH)
 
       # Arm class instance
-      self.arm = arm.Arm(self.arm_elevator_motor, self.arm_base_motor, self.arm_end_servo_1, self.arm_end_servo_2)
+      self.arm = arm.Arm(self.arm_elevator_motor, self.arm_base_motor, self.arm_end_servo_1, self.arm_end_servo_2, self.arm_top_limit_switch, self.arm_bottom_limit_switch)
 
       # operator controller with buttons for features of robot
       self.operator_controller = wpilib.interfacs.GenericHID(constants.ID_CONTROLLER)
@@ -68,7 +63,6 @@ class MyRobot(wpilib.TimedRobot):
       self.rotary_controller = rotary_controller.RotaryJoystick(constants.ID_CONTROLLER)
 
       self.network_receiver = networking.NetworkReciever()
-
 
    def autonomoutInit(self):
       self.timer.reset()
@@ -139,7 +133,5 @@ class MyRobot(wpilib.TimedRobot):
       except:
          raise
          
-
-
 if __name__ == "__main__":
    wpilib.run(MyRobot)
