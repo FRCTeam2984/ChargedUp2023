@@ -42,7 +42,6 @@ class MyRobot(wpilib.TimedRobot):
       self.drive_imu = imutil.PigeonIMU(self.middle_left)
       self.pid = pid.PID()
 
-
       # Balance class instance
       self.balance = balance.Balance(self.drive_imu, self.drive, self.front_additional, self.back_additional)
 
@@ -51,9 +50,11 @@ class MyRobot(wpilib.TimedRobot):
       self.arm_base_motor = rev.CANSparkMax(constants.ID_ARM_CHAIN)
       self.arm_end_servo_1 = wpilib.Servo(constants.ID_ARM_SERVO_1)
       self.arm_end_servo_2 = wpilib.Servo(constants.ID_ARM_SERVO_2)
+      self.arm_elevator_limit_switch = self.arm_elevator_motor.getReverseLimitSwitch(rev.SparkMaxLimitSwitch)
+      self.arm_base_limit_switch = self.arm_base_motor.getReverseLimitSwitch(rev.SparkMaxLimitSwitch)
 
       # Arm class instance
-      self.arm = arm.Arm(self.arm_elevator_motor, self.arm_base_motor, self.arm_end_servo_1, self.arm_end_servo_2, self.arm_top_limit_switch, self.arm_bottom_limit_switch)
+      self.arm = arm.Arm(self.arm_elevator_motor, self.arm_base_motor, self.arm_end_servo_1, self.arm_end_servo_2, self.arm_elevator_limit_switch, self.arm_base_limit_switch, self.pid)
 
       # operator controller with buttons for features of robot
       self.operator_controller = wpilib.interfacs.GenericHID(constants.ID_CONTROLLER)
