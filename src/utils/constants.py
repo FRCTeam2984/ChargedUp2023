@@ -22,18 +22,6 @@ ELEVATOR_HIGH = 999
 DRIVE_MOTOR_POWER_MULTIPLIER = 2
 DRIVE_MIDDLE_WHEEL_SPEED = 3
 
-# mode of autonomous can change/develop later
-AUTO_MODE = 0
-
-# stages of autonomous can change later
-IDLE = 0
-PLACING_PIECE = 1
-MOVING_OUT_COMMUNITY = 2
-TURNING = 3
-BALANCING = 4
-DONE = 5
-
-
 #IDs for motors/physical components
 # arbitrary numbers can put correct ones later
 ID_DRIVE_FRONT_LEFT = 0
