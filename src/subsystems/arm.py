@@ -62,9 +62,7 @@ class Arm:
       return self.arm_base_motor.getAbsoluteEncoder()
 
 
-
-
-   # moving the 
+   # moving the elevator to a "desired" position
    def set_elevator_position(self, desired_encoder_value):
       clamped_encoder = math_functions.clamp(desired_encoder_value, self.ENCODER_MIN, self.ENCODER_MAX)
       actual_encoder = self.get_elevator_motor_encoder()
@@ -97,19 +95,44 @@ class Arm:
       self.position = self.HOME
 
    def position_ground(self):
-      self.position = self.GROUND
+      self.reset_servo_angles()
       # ask neal tomorrow, i guess we just need percentages of the height/encoder max value and go from there using the functions i made the hopefully work
+      self.set_elevator_position(0)
+      
+      self.position = self.GROUND
+
 
    def position_cube_one(self):
+      self.reset_servo_angles()
+
+      # i just picked random values and i don't even know if the functions i wrote work
+      self.set_elevator_position(500)
+      self.set_base_position(500)
+
       self.position = self.CUBE_ONE
 
    def position_cube_two(self):
+      self.reset_servo_angles()
+
+      self.set_elevator_position(self.ENCODER_MAX)
+      self.set_elevator_position(self.ENCODER_MAX)
+
       self.position = self.CUBE_TWO
 
    def position_cone_one(self):
+      self.reset_servo_angles()
+
+      self.set_elevator_position(500)
+      self.set_elevator_position(500)
+
       self.position = self.CONE_ONE
 
    def position_cone_two(self):
+      self.reset_servo_angles()
+
+      self.set_elevator_position(self.ENCODER_MAX)
+      self.set_elevator_position(self.ENCODER_MAX)
+
       self.position = self.CONE_TWO
    
    def calibration(self):
@@ -117,4 +140,5 @@ class Arm:
       # set the ground position to zero
       # move up one revolution at a time until the top limit switch is clicked
       # justify values to get a percent-based system by dividing the total number of revolutions by itself and multiply by 100
-      pass
+      self.ENCODER_MAX = 999
+      self.ENCODER_MIN = 0

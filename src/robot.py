@@ -3,7 +3,7 @@ import math
 from subsystems import arm, drive, networking, rotary_controller
 
 from utils import math_functions, constants, imutil, pid
-from commands import balance
+from commands import balance, cone, cube, autonomous
 
 """
 NOTE:
@@ -34,16 +34,10 @@ class MyRobot(wpilib.TimedRobot):
       self.front_additional = ctre.WPI_TalonSRX(constants.ID_ADDITIONAL_FRONT)
       self.back_additional = ctre.WPI_TalonSRX(constants.ID_ADDITIONAL_BACK)
 
-      # Drive class instance
-      self.drive = drive.Drive(self.front_left, self.front_right, self.middle_left, self.middle_right, self.back_left, self.back_right)
-
       # imu and pid stuff to be added below
       # using the middle left motor, even though the middle right one can be used too
       self.drive_imu = imutil.PigeonIMU(self.middle_left)
       self.pid = pid.PID()
-
-      # Balance class instance
-      self.balance = balance.Balance(self.drive_imu, self.drive, self.front_additional, self.back_additional)
 
       # Motors and servos that control arm
       self.arm_elevator_motor = rev.CANSparkMax(constants.ID_ARM_ELEVATOR)
@@ -53,9 +47,6 @@ class MyRobot(wpilib.TimedRobot):
       self.arm_elevator_limit_switch = self.arm_elevator_motor.getReverseLimitSwitch(rev.SparkMaxLimitSwitch)
       self.arm_base_limit_switch = self.arm_base_motor.getReverseLimitSwitch(rev.SparkMaxLimitSwitch)
 
-      # Arm class instance
-      self.arm = arm.Arm(self.arm_elevator_motor, self.arm_base_motor, self.arm_end_servo_1, self.arm_end_servo_2, self.arm_elevator_limit_switch, self.arm_base_limit_switch, self.pid)
-
       # operator controller with buttons for features of robot
       self.operator_controller = wpilib.interfacs.GenericHID(constants.ID_CONTROLLER)
       
@@ -63,57 +54,33 @@ class MyRobot(wpilib.TimedRobot):
       self.drive_controller = wpilib.XboxController(constants.ID_CONTROLLER)
       self.rotary_controller = rotary_controller.RotaryJoystick(constants.ID_CONTROLLER)
 
+      self.drive = drive.Drive(self.front_left, self.front_right, self.middle_left, self.middle_right, self.back_left, self.back_right)
+      self.arm = arm.Arm(self.arm_elevator_motor, self.arm_base_motor, self.arm_end_servo_1, self.arm_end_servo_2, self.arm_elevator_limit_switch, self.arm_base_limit_switch, self.pid)
+      self.balance = balance.Balance(self.drive_imu, self.drive, self.front_additional, self.back_additional)
+
+
       self.network_receiver = networking.NetworkReciever()
 
    def autonomoutInit(self):
-      self.timer.reset()
-      self.timer.start()
+      self.autonomous = autonomous.Autonomous(self.drive, self.arm, self.balance)
 
-      self.auto_stage = 0
+      self.AUTO_MODE_ONE = 0
+      self.AUTO_MODE_TWO = 0
+      self.AUTO_MODE = self.AUTO_MODE_ONE
+
 
    def autonomousPeriodic(self):
       # replace numbers with constants from constants.py file
-      if self.AUTO_MODE == 0:
-         if self.auto_stage == 0:
-            pass
-            self.auto_stage = 1
-         
-         if self.auto_stage == 1:
-            pass
-            self.auto_stage = 2
+      if self.AUTO_MODE == self.AUTO_MODE_ONE:
+         self.autonomous.auto_mode_one()
 
-         if self.auto_stage == 2:
-            pass
-            self.auto_stage = 3
+      elif self.AUTO_MODE == self.AUTO_MODE_TWO:
+         self.autonomous.auto_mode_two()
 
-         if self.auto_stage == 4:
-            pass
-            self.auto_stage = 5
-
-         if self.auto_stage == 5:
-            pass
+      else:
+         # stop everything
+         pass
       
-      elif self.AUTO_MODE == 1:
-         if self.auto_stage == 0:
-            pass
-            self.auto_stage = 1
-         
-         if self.auto_stage == 1:
-            pass
-            self.auto_stage = 2
-
-         if self.auto_stage == 2:
-            pass
-            self.auto_stage = 3
-
-         if self.auto_stage == 4:
-            pass
-            self.auto_stage = 5
-
-         if self.auto_stage == 5:
-            pass
-
-
    def teleopPeriodic(self):
       try:
          # check if each part of the robot is enabled or not before checking if buttons pressed, etc.
