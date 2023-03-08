@@ -1,22 +1,25 @@
 # functions for moving joints and servos on the arm to make it move in certain ways
 # Those functions are used to pick up the cones/cubes and place them where they need to be
 
-from wpilib import Servo
-from rev import CANSparkMax, SparkMaxLimitSwitch
+from wpilib import Servo, DigitalInput
+from rev import CANSparkMax
 
 from utils import math_functions, pid
 # maybe we need to use PID in arm control to get accurate positions and hold it there
 
 class Arm:
-   def __init__(self, _arm_elevator_motor : CANSparkMax, _arm_base_motor : CANSparkMax, _arm_end_servo_cube : Servo, _arm_end_servo_cone : Servo, _arm_elevator_limit_switch : SparkMaxLimitSwitch, _arm_base_limit_switch : SparkMaxLimitSwitch, _pid : pid.PID):
+   def __init__(self, _arm_elevator_motor : CANSparkMax, _arm_base_motor : CANSparkMax, _arm_end_servo_cube : Servo, _arm_end_servo_cone : Servo, _arm_cube_limit_switch : DigitalInput, _pid : pid.PID):
       self.arm_elevator_motor = _arm_elevator_motor
       self.arm_base_motor = _arm_base_motor
 
       self.arm_end_servo_cube = _arm_end_servo_cube
-      self.arm_end_servo_cone = _arm_end_servo_cone
+      self.arm_cube_limit_switch = _arm_cube_limit_switch
+      self.cube_servo_min = 0
+      self.cube_servo_max = 135
 
-      self.arm_elevator_limit_switch = _arm_elevator_limit_switch
-      self.arm_base_limit_switch = _arm_base_limit_switch
+      self.arm_end_servo_cone = _arm_end_servo_cone
+      self.cone_servo_min = 0
+      self.cone_servo_max = 75
 
       self.pid = _pid
 
@@ -35,25 +38,46 @@ class Arm:
 
 
    # functions to move the servos and motors in the arm given a speed or angle
-   def set_servo_cube_angle(self, angle):
-      clamped_angle = math_functions.clamp(angle, 0, 360)
-      self.arm_end_servo_cube.setAngle(clamped_angle)
+   def open_cube_arm(self):
+      self.arm_end_servo_cube.setAngle(self.cube_servo_min)
 
-   def set_servo_cone_angle(self, angle):
-      clamped_angle = math_functions.clamped(angle, 0, 360)
-      self.arm_end_servo_cone.setAngle(clamped_angle)
+   def close_cube_arm(self):
+      self.arm_end_servo_cube.setAngle(self.cube_servo_max)
 
-   def reset_servo_angles(self):
-      self.set_servo_cube_angle(0)
-      self.set_servo_cone_angle(0)
+   def check_holding_cube(self):
+      return self.arm_cube_limit_switch.get()
+
+   def lift_cone_arm(self):
+      self.arm_end_servo_cone.setAngle(self.cone_servo_max)
+
+   def lower_cone_arm(self):
+      self.arm_end_servo_cone.setAngle(self.cone_servo_min)
 
    def set_elevator_speed(self, speed):
       clamped_speed = math_functions.clamp(speed, -1, 1)
+
+      if clamped_speed > 0:
+         print("raising elevator")
+      elif clamped_speed < 0:
+         print("lowering elevator")
+      
       self.arm_elevator_motor.set(clamped_speed)
+
+   def stop_elevator(self):
+      self.arm_elevator_motor.set(0)
 
    def set_base_speed(self, speed):
       clamped_speed = math_functions.clamp(speed, -1, 1)
+
+      if clamped_speed > 0:
+         print("raising arm")
+      elif clamped_speed < 0:
+         print("lowering arm")
+
       self.arm_base_motor.set(clamped_speed)
+
+   def stop_base(self):
+      self.arm_base_motor.set(0)
 
    def get_elevator_motor_encoder(self):
       return self.arm_elevator_motor.getAbsoluteEncoder()
@@ -87,15 +111,12 @@ class Arm:
 
    # the different positions the arm needs to be able to travel to
    def position_home(self):
-      self.reset_servo_angles()
-
       self.set_elevator_position(0)
       self.set_base_position(0)
 
       self.position = self.HOME
 
    def position_ground(self):
-      self.reset_servo_angles()
       # ask neal tomorrow, i guess we just need percentages of the height/encoder max value and go from there using the functions i made the hopefully work
       self.set_elevator_position(0)
       
@@ -103,8 +124,6 @@ class Arm:
 
 
    def position_cube_one(self):
-      self.reset_servo_angles()
-
       # i just picked random values and i don't even know if the functions i wrote work
       self.set_elevator_position(500)
       self.set_base_position(500)
@@ -112,24 +131,18 @@ class Arm:
       self.position = self.CUBE_ONE
 
    def position_cube_two(self):
-      self.reset_servo_angles()
-
       self.set_elevator_position(self.ENCODER_MAX)
       self.set_elevator_position(self.ENCODER_MAX)
 
       self.position = self.CUBE_TWO
 
    def position_cone_one(self):
-      self.reset_servo_angles()
-
       self.set_elevator_position(500)
       self.set_elevator_position(500)
 
       self.position = self.CONE_ONE
 
    def position_cone_two(self):
-      self.reset_servo_angles()
-
       self.set_elevator_position(self.ENCODER_MAX)
       self.set_elevator_position(self.ENCODER_MAX)
 

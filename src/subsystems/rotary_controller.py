@@ -33,37 +33,37 @@ class RotaryJoystick(Joystick):
             # mid = y since it is greater that x but less than z
             mid = y
 
-            angle = (60 - self.generate_angle_midmax(mid, _min, _max)) * 60
+            angle = 60 - self.generate_angle_midmax(mid, _min, _max) * 60
 
          if ((y <= x) and (x <= z)):
             # mid = x since it is greater than y but less than z
             mid = x
 
-            angle = (60 + self.generate_angle_midmax(mid, _min, _max)) * 60
+            angle = 60 + self.generate_angle_midmax(mid, _min, _max) * 60
 
          if ((y <= z) and (z <= x)):
             # mid = z since it is greater than y but less than x
             mid = z
 
-            angle = (180 - self.generate_angle_midmax(mid, _min, _max)) * 60
+            angle = 180 - self.generate_angle_midmax(mid, _min, _max) * 60
 
          if ((z <= y) and (y <= x)):
             # mid = y since it is greater than z but less than x
             mid = y
 
-            angle = (180 + self.generate_angle_midmax(mid, _min, _max)) * 60
+            angle = 180 + self.generate_angle_midmax(mid, _min, _max) * 60
 
          if ((z <= x) and (x <= y)):
             # mid = x since it is greater than z but less than y
             mid = x
 
-            angle = (300 - self.generate_angle_midmax(mid, _min, _max)) * 60
+            angle = 300 - self.generate_angle_midmax(mid, _min, _max) * 60
 
          if ((x <= z) and (z <= y)):
             # mid = z since it is greater than x but less than y
             mid = z
 
-            angle = (300 + self.generate_angle_midmax(mid, _min, _max)) * 60
+            angle = 300 + self.generate_angle_midmax(mid, _min, _max) * 60
 
          angle += self.angle_offset
 

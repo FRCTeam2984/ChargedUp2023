@@ -61,7 +61,7 @@ class Cone:
       # same as above probably just get servo position
       return True
 
-   def pickup_cone(self):
+   def pickup_cone(self, button_is_pressed, cube_is_seen):
       if self.located_cone == constants.CONE_FACING_TOWARDS:
          # state machine is the cone is knocked over and the base is facing towards the robot
          if self.state == self.IDLE:

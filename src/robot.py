@@ -28,36 +28,29 @@ class MyRobot(wpilib.TimedRobot):
       self.back_right = ctre.WPI_TalonFX(constants.ID_DRIVE_BACK_RIGHT)
 
       # Middle omni wheels are powered by Neo550 motors
-      self.middle_right = rev.CANSparkMax(constants.ID_DRIVE_MIDDLE_RIGHT)
-      self.middle_left = rev.CANSparkMax(constants.ID_DRIVE_MIDDLE_LEFT)
+      self.middle_right = rev.CANSparkMax(constants.ID_DRIVE_MIDDLE_RIGHT, rev.CANSparkMaxLowLevel.MotorType.kBrushless)
+      self.middle_left = rev.CANSparkMax(constants.ID_DRIVE_MIDDLE_LEFT, rev.CANSparkMaxLowLevel.MotorType.kBrushless)
 
       self.front_additional = ctre.WPI_TalonSRX(constants.ID_ADDITIONAL_FRONT)
       self.back_additional = ctre.WPI_TalonSRX(constants.ID_ADDITIONAL_BACK)
 
       # imu and pid stuff to be added below
       # using the middle left motor, even though the middle right one can be used too
-      self.drive_imu = imutil.PigeonIMU(self.middle_left)
+      self.imu_talon = ctre.WPI_TalonSRX(constants.ID_IMU_TALON)
+      self.drive_imu = imutil.Imutil(self.imu_talon)
+
       self.pid = pid.PID()
 
       # Motors and servos that control arm
-      self.arm_elevator_motor = rev.CANSparkMax(constants.ID_ARM_ELEVATOR)
-      self.arm_base_motor = rev.CANSparkMax(constants.ID_ARM_CHAIN)
-      self.arm_end_servo_1 = wpilib.Servo(constants.ID_ARM_SERVO_1)
-      self.arm_end_servo_2 = wpilib.Servo(constants.ID_ARM_SERVO_2)
-      self.arm_elevator_limit_switch = self.arm_elevator_motor.getReverseLimitSwitch(rev.SparkMaxLimitSwitch)
-      self.arm_base_limit_switch = self.arm_base_motor.getReverseLimitSwitch(rev.SparkMaxLimitSwitch)
+      self.arm_elevator_motor = rev.CANSparkMax(constants.ID_ARM_ELEVATOR, rev.CANSparkMaxLowLevel.MotorType.kBrushless)
+      self.arm_base_motor = rev.CANSparkMax(constants.ID_ARM_BASE, rev.CANSparkMaxLowLevel.MotorType.kBrushless)
+      self.arm_end_servo_cube = wpilib.Servo(constants.ID_ARM_SERVO_CUBE)
+      self.arm_end_servo_cone = wpilib.Servo(constants.ID_ARM_SERVO_CONE)
+      self.arm_cube_limit_switch = wpilib.DigitalInput(constants.ID_ARM_CUBE_LIMIT_SWITCH)
 
-      # operator controller with buttons for features of robot
-      self.operator_controller = wpilib.interfacs.GenericHID(constants.ID_CONTROLLER)
-      
-      # drive controller and rotary controller for driving and turning the robot
-      self.drive_controller = wpilib.XboxController(constants.ID_CONTROLLER)
-      self.rotary_controller = rotary_controller.RotaryJoystick(constants.ID_CONTROLLER)
-
-      self.drive = drive.Drive(self.front_left, self.front_right, self.middle_left, self.middle_right, self.back_left, self.back_right)
-      self.arm = arm.Arm(self.arm_elevator_motor, self.arm_base_motor, self.arm_end_servo_1, self.arm_end_servo_2, self.arm_elevator_limit_switch, self.arm_base_limit_switch, self.pid)
+      self.drive = drive.Drive(self.front_left, self.front_right, self.middle_left, self.middle_right, self.back_left, self.back_right, self.drive_imu, self.pid)
+      self.arm = arm.Arm(self.arm_elevator_motor, self.arm_base_motor, self.arm_end_servo_cube, self.arm_end_servo_cone, self.arm_cube_limit_switch, self.pid)
       self.balance = balance.Balance(self.drive_imu, self.drive, self.front_additional, self.back_additional)
-
 
       self.network_receiver = networking.NetworkReciever()
 
@@ -80,20 +73,88 @@ class MyRobot(wpilib.TimedRobot):
       else:
          # stop everything
          pass
-      
+
+   def teleopInit(self):
+      while not wpilib.Joystick(constants.ID_ROTARY_CONTROLLER).getRawButton(12) or wpilib.Joystick(constants.ID_OPERATOR_CONTROLLER).getRawButton(12):
+         # switch operator and rotary ids
+         temp = constants.ID_OPERATOR_CONTROLLER
+         constants.ID_OPERATOR_CONTROLLER = constants.ID_ROTARY_CONTROLLER
+         constants.ID_ROTARY_CONTROLLER = temp
+
+
+      self.rotary_controller = rotary_controller.RotaryJoystick(constants.ID_ROTARY_CONTROLLER)
+      self.rotary_buttons = wpilib.interfaces.GenericHID(constants.ID_ROTARY_CONTROLLER)
+
+      self.operator_controller = wpilib.interfaces.GenericHID(constants.ID_OPERATOR_CONTROLLER)
+      self.drive_joystick = wpilib.XboxController(constants.ID_DRIVE_CONTROLLER)
+
    def teleopPeriodic(self):
       try:
-         # check if each part of the robot is enabled or not before checking if buttons pressed, etc.
+         # check if each part of the robot is enabled or not before checking if buttons pressed, etc.         
          if constants.ENABLE_DRIVING:
-            joystick_y = math_functions.interpolation(self.drive_controller.getRawAxis(1))
-            joystick_x = math_functions.interpolation(self.drive_controller.getRawAxis(0))
+            joystick_y = math_functions.interpolation(self.drive_joystick.getRawAxis(1))
+            joystick_x = math_functions.interpolation(self.drive_joystick.getRawAxis(0))
             angle = self.rotary_controller.rotary_inputs()
 
-            self.drive.absolute_drive(joystick_y, joystick_x, angle, constants.DRIVE_MOTOR_POWER_MULTIPLIER)
+            #print(f"joystick_y: {joystick_y}, joystick_x: {joystick_x}, angle: {angle}")
 
+            self.drive.absolute_drive(joystick_y, joystick_x, angle, True, constants.DRIVE_MOTOR_POWER_MULTIPLIER)
 
          if constants.ENABLE_ARM:
-            pass
+            raise_elevator = self.operator_controller.getRawButton(1)
+            lower_elevator = self.operator_controller.getRawButton(2)
+
+            lift_arm = self.operator_controller.getRawButton(3)
+            lower_arm = self.operator_controller.getRawButton(4)
+
+            open_cube_arm = self.operator_controller.getRawButton(5)
+            close_cube_arm = self.operator_controller.getRawButton(6)
+
+            lower_cone_arm = self.operator_controller.getRawButton(9)
+            raise_cone_arm = self.operator_controller.getRawButton(10)
+
+            if raise_elevator:
+               #print("raise elevator")
+               self.arm.set_elevator_speed(0.3)
+
+            elif lower_elevator:
+               #print("lower elevator")
+               self.arm.set_elevator_speed(-0.3)
+
+            else:
+               self.arm.stop_elevator()
+            
+
+            if lift_arm:
+               self.arm.set_base_speed(0.17)
+
+            elif lower_arm:
+               self.arm.set_base_speed(-0.17)
+
+            else:
+               self.arm.stop_base()
+
+
+
+
+            if open_cube_arm:
+               print("opening cube arm")
+               self.arm.open_cube_arm()
+
+            elif close_cube_arm:
+               print("closing cube arm")
+               self.arm.close_cube_arm()
+
+
+            
+            if raise_cone_arm:
+               print("raising cone arm")
+               self.arm.lift_cone_arm()
+
+            elif lower_cone_arm:
+               print("lowering cone arm")
+               self.arm.lower_cone_arm()
+
 
          if constants.ENABLE_BALANCE:
             pass

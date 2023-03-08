@@ -22,7 +22,12 @@ class Drive:
 
       # imu and pid stuff to be added below
       self.drive_imu = _drive_imu
+
       self.pid = _pid
+      self.pid.set_pid(0.01, 0.0002, 0.05, 0)
+      self.pid_secondary = _pid
+      self.pid_secondary.set_pid(0.01, 0.0002, 0.05, 0)
+
 
    # set the speed of the wheels on the left of the robot and includes the middle wheels
    def set_left_speed(self, speed):
@@ -98,7 +103,7 @@ class Drive:
       self.back_right.set_speed(back_right_speed)
 
 
-   def absolute_drive(self, speed, left_right, desired_angle, multiplier):
+   def absolute_drive(self, speed, left_right, desired_angle, normal_drive, multiplier):
       # clamp the speed between -1 and 1 for safety purposes
       clamped_speed = math_functions.clamp(speed, -1, 1)
       
@@ -112,13 +117,22 @@ class Drive:
       steer = 0
 
       if self.drive_imu.check_if_working():
-            steer_pid = self.pid.steer_pid(delta_angle)
-            steer = math_functions.clamp(steer_pid, -1, 1)
+            if normal_drive:
+               steer = max(-1, min(1, self.pid.steer_pid(delta_angle)))
+               print(f"steer: {steer}")
+            else:
+               steer = math_functions.clamp(self.pid_secondary(delta_angle), -1, 1)
 
-      self.front_left.set((speed - left_right + steer) * multiplier)
-      self.front_right.set((speed + left_right - steer) * multiplier)
-      self.back_left.set((speed + left_right + steer) * multiplier)
-      self.back_right.set((speed - left_right - steer) * multiplier)
-      
+      # for next year have to manually make sure the signs are good its kinda weird sometimes   
+      #self.front_left.set((clamped_speed - left_right - steer) * multiplier)
+      #self.front_right.set((clamped_speed + left_right + steer) * multiplier)
+      #self.back_left.set((clamped_speed + left_right - steer) * multiplier)
+      #self.back_right.set((clamped_speed - left_right + steer) * multiplier)
 
+      self.front_left.set(-(clamped_speed + left_right + steer) * multiplier)
+      self.front_right.set((clamped_speed - left_right - steer) * multiplier)
+      self.back_left.set(-(clamped_speed - left_right + steer) * multiplier)
+      self.back_right.set((clamped_speed + left_right - steer) * multiplier)
 
+      # self.middle_left.setVoltage((clamped_speed + steer) * multiplier * 5)
+      # self.middle_right.setVoltage((clamped_speed - steer) * multiplier * 5)
