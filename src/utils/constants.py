@@ -4,7 +4,7 @@ Orientation of the motors is as if you were standing at the back of the robot an
 
 # Enable/disable feature
 # make sure to change whenever testing
-ENABLE_DRIVING = True
+ENABLE_DRIVING = False
 ENABLE_ARM = True
 ENABLE_BALANCE = False
 
@@ -30,7 +30,7 @@ CUBE_COLLECT_Y =168738
 CUBE_SERVO_ANGLE = 97287
 
 # drive multipliers/power regulations
-DRIVE_MOTOR_POWER_MULTIPLIER = 0.2
+DRIVE_MOTOR_POWER_MULTIPLIER = 1
 DRIVE_MIDDLE_WHEEL_SPEED = 1
 
 #IDs for motors/physical components

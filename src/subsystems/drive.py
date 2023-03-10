@@ -25,6 +25,7 @@ class Drive:
 
       self.pid = _pid
       self.pid.set_pid(0.01, 0.0002, 0.05, 0)
+
       self.pid_secondary = _pid
       self.pid_secondary.set_pid(0.01, 0.0002, 0.05, 0)
 
@@ -113,15 +114,19 @@ class Drive:
       # put delta_angle in a range from -180 to 180 degrees
       delta_angle = ((delta_angle + 180) % 360) - 180
 
+      print(f"current angle = {current_angle}, desired_angle = {desired_angle}")
+
       # set "steer" to zero
       steer = 0
 
       if self.drive_imu.check_if_working():
             if normal_drive:
                steer = max(-1, min(1, self.pid.steer_pid(delta_angle)))
-               print(f"steer: {steer}")
+               #print(f"steer: {steer}")
             else:
                steer = math_functions.clamp(self.pid_secondary(delta_angle), -1, 1)
+
+      #steer = 0
 
       # for next year have to manually make sure the signs are good its kinda weird sometimes   
       #self.front_left.set((clamped_speed - left_right - steer) * multiplier)

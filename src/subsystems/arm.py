@@ -2,15 +2,26 @@
 # Those functions are used to pick up the cones/cubes and place them where they need to be
 
 from wpilib import Servo, DigitalInput
-from rev import CANSparkMax
+from rev import CANSparkMax, SparkMaxLimitSwitch
+from rev._rev import SparkMaxAbsoluteEncoder
 
 from utils import math_functions, pid
 # maybe we need to use PID in arm control to get accurate positions and hold it there
 
 class Arm:
-   def __init__(self, _arm_elevator_motor : CANSparkMax, _arm_base_motor : CANSparkMax, _arm_end_servo_cube : Servo, _arm_end_servo_cone : Servo, _arm_cube_limit_switch : DigitalInput, _pid : pid.PID):
+   def __init__(self, _arm_elevator_motor : CANSparkMax, _arm_base_motor : CANSparkMax, _arm_end_servo_cube : Servo, _arm_end_servo_cone : Servo, _arm_cube_limit_switch : DigitalInput, _elevator_pid : pid.PID, _base_pid : pid.PID):
       self.arm_elevator_motor = _arm_elevator_motor
+      self.elevator_encoder_zero = 0.12345
+      self.elevator_desired_position = 0
+      self.elevator_max_limit_switch = self.arm_elevator_motor.getForwardLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen)
+      self.elevator_encoder = self.arm_elevator_motor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle)
+
       self.arm_base_motor = _arm_base_motor
+      self.base_encoder_zero = 0.12345
+      self.base_desired_position = 0
+      self.base_min_limit_switch = self.arm_base_motor.getForwardLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen)
+      self.base_encoder = self.arm_base_motor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle)
+
 
       self.arm_end_servo_cube = _arm_end_servo_cube
       self.arm_cube_limit_switch = _arm_cube_limit_switch
@@ -21,11 +32,12 @@ class Arm:
       self.cone_servo_min = 0
       self.cone_servo_max = 75
 
-      self.pid = _pid
+      self.elevator_pid = _elevator_pid
+      self.elevator_pid.set_pid(1, 0, 0, 0)
 
-      # we can use PID for the elevator motor control, as we can input a target encoder value and the actual encoder value
-      self.ENCODER_MIN = 0
-      self.ENCODER_MAX = 999
+      self.base_pid = _base_pid
+      self.base_pid.set_pid(1, 0, 0, 0)
+
 
       self.HOME = 0
       self.GROUND = 1
@@ -47,19 +59,28 @@ class Arm:
    def check_holding_cube(self):
       return self.arm_cube_limit_switch.get()
 
+
+
+
    def lift_cone_arm(self):
       self.arm_end_servo_cone.setAngle(self.cone_servo_max)
 
    def lower_cone_arm(self):
       self.arm_end_servo_cone.setAngle(self.cone_servo_min)
 
+
+
+
+
+
+
    def set_elevator_speed(self, speed):
       clamped_speed = math_functions.clamp(speed, -1, 1)
 
-      if clamped_speed > 0:
+      """if clamped_speed > 0:
          print("raising elevator")
       elif clamped_speed < 0:
-         print("lowering elevator")
+         print("lowering elevator")"""
       
       self.arm_elevator_motor.set(clamped_speed)
 
@@ -69,44 +90,75 @@ class Arm:
    def set_base_speed(self, speed):
       clamped_speed = math_functions.clamp(speed, -1, 1)
 
-      if clamped_speed > 0:
+      """if clamped_speed > 0:
          print("raising arm")
       elif clamped_speed < 0:
-         print("lowering arm")
+         print("lowering arm")"""
 
       self.arm_base_motor.set(clamped_speed)
 
    def stop_base(self):
       self.arm_base_motor.set(0)
 
+
+
+
+
    def get_elevator_motor_encoder(self):
-      return self.arm_elevator_motor.getAbsoluteEncoder()
+      return self.elevator_encoder.getPosition()
 
    def get_base_motor_encoder(self):
-      return self.arm_base_motor.getAbsoluteEncoder()
-
+      return self.base_encoder.getPosition()
 
    # moving the elevator to a "desired" position
    def set_elevator_position(self, desired_encoder_value):
-      clamped_encoder = math_functions.clamp(desired_encoder_value, self.ENCODER_MIN, self.ENCODER_MAX)
       actual_encoder = self.get_elevator_motor_encoder()
 
-      # can we use steer pid? If so, should we rename the function? If not, how can we change the function to make it work with this scenario?
-      error = clamped_encoder - actual_encoder
-      adjustment = self.pid.steer_pid(error)
+      error = desired_encoder_value - actual_encoder
+      adjustment = self.elevator_pid.steer_pid(error)
 
       self.set_elevator_speed(adjustment)
 
 
    def set_base_position(self, desired_encoder_value):
-      clamped_encoder = math_functions.clamp(desired_encoder_value, self.ENCODER_MIN, self.ENCODER_MAX)
       actual_encoder = self.get_base_motor_encoder()
 
       # can we use steer pid? If so, should we rename the function? If not, how can we change the function to make it work with this scenario?
-      error = clamped_encoder - actual_encoder
-      adjustment = self.pid.steer_pid(error)
+      error = desired_encoder_value - actual_encoder
+      adjustment = self.base_pid.steer_pid(error)
 
       self.set_base_speed(adjustment)
+
+   
+   def calibrate_elevator(self):
+      # if the elevator is not touching the limit switch, move it up
+      # if it is touching the limit switch, get the encoder value and set the class variable to that value
+
+      #print(f"elevator_limit_switch_touching = {self.elevator_encoder.get()}")
+
+      if not self.elevator_max_limit_switch.get():
+         self.set_elevator_speed(0.3)
+
+      else:
+         encoder_limit_switch_value = self.get_elevator_motor_encoder()
+         self.elevator_encoder_zero = encoder_limit_switch_value
+
+
+
+   def calibrate_base(self):
+      #print(f"base_limit_switch_touching = {self.base_encoder.get()}")
+
+
+      if not self.base_min_limit_switch.get():
+         self.set_base_speed(-0.17)
+
+      else:
+         base_limit_switch_value = self.get_base_motor_encoder()
+         self.base_encoder_zero = base_limit_switch_value
+
+
+
+
 
 
    # the different positions the arm needs to be able to travel to
@@ -148,10 +200,3 @@ class Arm:
 
       self.position = self.CONE_TWO
    
-   def calibration(self):
-      # move motor down until the bottom limit switch is clicked
-      # set the ground position to zero
-      # move up one revolution at a time until the top limit switch is clicked
-      # justify values to get a percent-based system by dividing the total number of revolutions by itself and multiply by 100
-      self.ENCODER_MAX = 999
-      self.ENCODER_MIN = 0
