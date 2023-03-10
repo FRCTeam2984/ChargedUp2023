@@ -40,6 +40,8 @@ class MyRobot(wpilib.TimedRobot):
       self.drive_imu = imutil.Imutil(self.imu_talon)
 
       self.pid = pid.PID()
+      self.elevator_pid = pid.PID()
+      self.base_pid = pid.PID()
 
       # Motors and servos that control arm
       self.arm_elevator_motor = rev.CANSparkMax(constants.ID_ARM_ELEVATOR, rev.CANSparkMaxLowLevel.MotorType.kBrushless)
@@ -49,7 +51,7 @@ class MyRobot(wpilib.TimedRobot):
       self.arm_cube_limit_switch = wpilib.DigitalInput(constants.ID_ARM_CUBE_LIMIT_SWITCH)
 
       self.drive = drive.Drive(self.front_left, self.front_right, self.middle_left, self.middle_right, self.back_left, self.back_right, self.drive_imu, self.pid)
-      self.arm = arm.Arm(self.arm_elevator_motor, self.arm_base_motor, self.arm_end_servo_cube, self.arm_end_servo_cone, self.arm_cube_limit_switch, self.pid)
+      self.arm = arm.Arm(self.arm_elevator_motor, self.arm_base_motor, self.arm_end_servo_cube, self.arm_end_servo_cone, self.arm_cube_limit_switch, self.elevator_pid, self.base_pid)
       self.balance = balance.Balance(self.drive_imu, self.drive, self.front_additional, self.back_additional)
 
       self.network_receiver = networking.NetworkReciever()
@@ -81,6 +83,8 @@ class MyRobot(wpilib.TimedRobot):
          constants.ID_OPERATOR_CONTROLLER = constants.ID_ROTARY_CONTROLLER
          constants.ID_ROTARY_CONTROLLER = temp
 
+         print(f"operator = {constants.ID_OPERATOR_CONTROLLER}, rotary = {constants.ID_ROTARY_CONTROLLER}")
+
 
       self.rotary_controller = rotary_controller.RotaryJoystick(constants.ID_ROTARY_CONTROLLER)
       self.rotary_buttons = wpilib.interfaces.GenericHID(constants.ID_ROTARY_CONTROLLER)
@@ -88,15 +92,38 @@ class MyRobot(wpilib.TimedRobot):
       self.operator_controller = wpilib.interfaces.GenericHID(constants.ID_OPERATOR_CONTROLLER)
       self.drive_joystick = wpilib.XboxController(constants.ID_DRIVE_CONTROLLER)
 
+      self.arm.elevator_desired_position = 10
+      self.arm.base_desired_position = 10
+
    def teleopPeriodic(self):
       try:
+         if (self.arm.elevator_encoder_zero == 0.12345):
+            self.arm.calibrate_elevator()
+
+         else:
+            self.arm.set_elevator_position(self.arm.elevator_desired_position)
+            #print(f"elev encoder = {self.arm.elevator_encoder_zero}")
+   
+
+         """
+         if (self.arm.base_encoder_zero == 0.12345):
+            self.arm.calibrate_base()
+
+         else:
+            self.arm.set_base_position(self.arm.base_desired_position)
+
+         """
+
+         print(f"elevator (z, p, d) = {self.arm.elevator_encoder_zero}, {self.arm.get_elevator_motor_encoder() - self.arm.elevator_encoder_zero}, {self.arm.elevator_desired_position} \
+              base (z, p, d) = {self.arm.base_encoder_zero}, {self.arm.get_base_motor_encoder() - self.arm.base_encoder_zero}, {self.arm.base_desired_position}")
+
          # check if each part of the robot is enabled or not before checking if buttons pressed, etc.         
          if constants.ENABLE_DRIVING:
             joystick_y = math_functions.interpolation(self.drive_joystick.getRawAxis(1))
             joystick_x = math_functions.interpolation(self.drive_joystick.getRawAxis(0))
             angle = self.rotary_controller.rotary_inputs()
 
-            #print(f"joystick_y: {joystick_y}, joystick_x: {joystick_x}, angle: {angle}")
+            print(f"speed (y): {joystick_y}, left_right (x): {joystick_x}")
 
             self.drive.absolute_drive(joystick_y, joystick_x, angle, True, constants.DRIVE_MOTOR_POWER_MULTIPLIER)
 
@@ -112,6 +139,18 @@ class MyRobot(wpilib.TimedRobot):
 
             lower_cone_arm = self.operator_controller.getRawButton(9)
             raise_cone_arm = self.operator_controller.getRawButton(10)
+
+
+            if self.operator_controller.getRawButton(11):
+               self.arm.elevator_desired_position = 100
+
+            if self.operator_controller.getRawButton(12):
+               self.arm.base_desired_position = 100
+
+            if self.rotary_buttons.getRawButton(1):
+               self.arm.elevator_desired_position = 10
+               self.arm.base_desired_position = 10
+
 
             if raise_elevator:
                #print("raise elevator")
