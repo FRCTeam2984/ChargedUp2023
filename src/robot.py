@@ -92,8 +92,8 @@ class MyRobot(wpilib.TimedRobot):
       self.operator_controller = wpilib.interfaces.GenericHID(constants.ID_OPERATOR_CONTROLLER)
       self.drive_joystick = wpilib.XboxController(constants.ID_DRIVE_CONTROLLER)
 
-      self.arm.elevator_desired_position = 10
-      self.arm.base_desired_position = 10
+      self.arm.elevator_desired_position = 50
+      self.arm.base_desired_position = 50
 
    def teleopPeriodic(self):
       try:
@@ -114,8 +114,8 @@ class MyRobot(wpilib.TimedRobot):
 
          """
 
-         print(f"elevator (z, p, d) = {self.arm.elevator_encoder_zero}, {self.arm.get_elevator_motor_encoder() - self.arm.elevator_encoder_zero}, {self.arm.elevator_desired_position} \
-              base (z, p, d) = {self.arm.base_encoder_zero}, {self.arm.get_base_motor_encoder() - self.arm.base_encoder_zero}, {self.arm.base_desired_position}")
+         print(f"elevator (z, p, d) = {self.arm.elevator_encoder_zero}, {self.arm.elevator_encoder_zero - self.arm.get_elevator_motor_encoder()}, {self.arm.elevator_desired_position} \
+              base (z, p, d) = {self.arm.base_encoder_zero}, {self.arm.base_encoder_zero - self.arm.get_base_motor_encoder()}, {self.arm.base_desired_position}")
 
          # check if each part of the robot is enabled or not before checking if buttons pressed, etc.         
          if constants.ENABLE_DRIVING:
@@ -142,7 +142,7 @@ class MyRobot(wpilib.TimedRobot):
 
 
             if self.operator_controller.getRawButton(11):
-               self.arm.elevator_desired_position = 100
+               self.arm.elevator_desired_position = 125
 
             if self.operator_controller.getRawButton(12):
                self.arm.base_desired_position = 100
@@ -161,7 +161,8 @@ class MyRobot(wpilib.TimedRobot):
                self.arm.set_elevator_speed(-0.3)
 
             else:
-               self.arm.stop_elevator()
+               pass
+               #self.arm.stop_elevator()
             
 
             if lift_arm:
@@ -171,7 +172,8 @@ class MyRobot(wpilib.TimedRobot):
                self.arm.set_base_speed(-0.17)
 
             else:
-               self.arm.stop_base()
+               pass
+               #self.arm.stop_base()
 
 
 
