@@ -3,7 +3,7 @@
 
 from wpilib import Servo, DigitalInput
 from rev import CANSparkMax, SparkMaxLimitSwitch
-from rev._rev import SparkMaxAbsoluteEncoder
+from rev._rev import SparkMaxRelativeEncoder
 
 from utils import math_functions, pid
 # maybe we need to use PID in arm control to get accurate positions and hold it there
@@ -14,13 +14,19 @@ class Arm:
       self.elevator_encoder_zero = 0.12345
       self.elevator_desired_position = 0
       self.elevator_max_limit_switch = self.arm_elevator_motor.getForwardLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen)
-      self.elevator_encoder = self.arm_elevator_motor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle)
+      self.elevator_encoder = self.arm_elevator_motor.getEncoder(SparkMaxRelativeEncoder.Type.kHallSensor, 42)
+      self.elevator_encoder_top = 10
+      self.elevator_encoder_bottom = 125
+      self.elevator_encoder_tolerance = 2
 
       self.arm_base_motor = _arm_base_motor
       self.base_encoder_zero = 0.12345
       self.base_desired_position = 0
       self.base_min_limit_switch = self.arm_base_motor.getForwardLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen)
-      self.base_encoder = self.arm_base_motor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle)
+      self.base_encoder = self.arm_base_motor.getEncoder(SparkMaxRelativeEncoder.Type.kHallSensor, 42)
+      self.base_encoder_in = None
+      self.base_encoder_out = None
+      self.base_encoder_tolerance = 2
 
 
       self.arm_end_servo_cube = _arm_end_servo_cube
@@ -33,10 +39,10 @@ class Arm:
       self.cone_servo_max = 75
 
       self.elevator_pid = _elevator_pid
-      self.elevator_pid.set_pid(1, 0, 0, 0)
+      self.elevator_pid.set_pid(0.02, 0, 0, 0)
 
       self.base_pid = _base_pid
-      self.base_pid.set_pid(1, 0, 0, 0)
+      self.base_pid.set_pid(0.01, 0, 0, 0)
 
 
       self.HOME = 0
@@ -59,6 +65,12 @@ class Arm:
    def check_holding_cube(self):
       return self.arm_cube_limit_switch.get()
 
+   def cube_arm_open_limit(self):
+      if abs(self.arm_end_servo_cube.getAngle - self.cube_servo_min) < 5:
+         return True
+      else:
+         return False
+
 
 
 
@@ -67,7 +79,6 @@ class Arm:
 
    def lower_cone_arm(self):
       self.arm_end_servo_cone.setAngle(self.cone_servo_min)
-
 
 
 
@@ -112,20 +123,26 @@ class Arm:
 
    # moving the elevator to a "desired" position
    def set_elevator_position(self, desired_encoder_value):
-      actual_encoder = self.get_elevator_motor_encoder()
+      self.elevator_desired_position = desired_encoder_value
+      actual_encoder = -self.get_elevator_motor_encoder() + self.elevator_encoder_zero
 
       error = desired_encoder_value - actual_encoder
-      adjustment = self.elevator_pid.steer_pid(error)
+      adjustment = self.elevator_pid.steer_pid(error) * -1
+      adjustment = math_functions.clamp(adjustment, -0.1, 0.1)
+
+      print(f"elevator_error = {error}, elevator_adj = {adjustment}")
 
       self.set_elevator_speed(adjustment)
 
 
    def set_base_position(self, desired_encoder_value):
-      actual_encoder = self.get_base_motor_encoder()
+      self.elevator_desired_position = desired_encoder_value
+      actual_encoder = self.get_base_motor_encoder() - self.base_encoder_zero
 
       # can we use steer pid? If so, should we rename the function? If not, how can we change the function to make it work with this scenario?
       error = desired_encoder_value - actual_encoder
       adjustment = self.base_pid.steer_pid(error)
+      adjustment = math_functions.clamp(adjustment, -0.1, 0.1)
 
       self.set_base_speed(adjustment)
 
@@ -137,12 +154,11 @@ class Arm:
       #print(f"elevator_limit_switch_touching = {self.elevator_encoder.get()}")
 
       if not self.elevator_max_limit_switch.get():
-         self.set_elevator_speed(0.3)
+         self.set_elevator_speed(0.1)
 
       else:
          encoder_limit_switch_value = self.get_elevator_motor_encoder()
          self.elevator_encoder_zero = encoder_limit_switch_value
-
 
 
    def calibrate_base(self):
@@ -163,16 +179,31 @@ class Arm:
 
    # the different positions the arm needs to be able to travel to
    def position_home(self):
-      self.set_elevator_position(0)
-      self.set_base_position(0)
+      self.set_elevator_position(self.elevator_encoder_top)
+      #self.set_base_position(self.base_encoder_in)
 
-      self.position = self.HOME
+
+      if self.check_arm_close():
+         self.position = self.HOME
+      else:
+         return
 
    def position_ground(self):
-      # ask neal tomorrow, i guess we just need percentages of the height/encoder max value and go from there using the functions i made the hopefully work
-      self.set_elevator_position(0)
+      self.set_elevator_position(115)
+      self.set_base_position(30)
       
-      self.position = self.GROUND
+      
+      if self.check_arm_close():
+         self.position = self.HOME
+      else:
+         return
+
+
+   def check_arm_close(self):
+      if abs((self.get_elevator_motor_encoder() - self.elevator_encoder_zero) - self.elevator_desired_position) < self.elevator_encoder_tolerance and abs(self.get_base_motor_encoder() - self.base_encoder_zero) < self.base_encoder_tolerance:
+         return True
+      else:
+         return False
 
 
    def position_cube_one(self):
