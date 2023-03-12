@@ -56,6 +56,8 @@ class MyRobot(wpilib.TimedRobot):
 
       self.network_receiver = networking.NetworkReciever()
 
+      self.auto_cube = cube.Cube(self.arm, self.drive, self.drive_imu, self.timer)
+
    def autonomoutInit(self):
       self.autonomous = autonomous.Autonomous(self.drive, self.arm, self.balance)
 
@@ -92,8 +94,11 @@ class MyRobot(wpilib.TimedRobot):
       self.operator_controller = wpilib.interfaces.GenericHID(constants.ID_OPERATOR_CONTROLLER)
       self.drive_joystick = wpilib.XboxController(constants.ID_DRIVE_CONTROLLER)
 
-      self.arm.elevator_desired_position = 50
-      self.arm.base_desired_position = 50
+      self.arm.elevator_desired_position = self.arm.elevator_encoder_top
+      self.arm.base_desired_position = self.arm.base_encoder_in
+
+      self.arm.open_cube_arm()
+      self.arm.lift_cone_arm()
 
    def teleopPeriodic(self):
       try:
@@ -102,20 +107,18 @@ class MyRobot(wpilib.TimedRobot):
 
          else:
             self.arm.set_elevator_position(self.arm.elevator_desired_position)
-            #print(f"elev encoder = {self.arm.elevator_encoder_zero}")
-   
 
-         """
-         if (self.arm.base_encoder_zero == 0.12345):
-            self.arm.calibrate_base()
+            if (self.arm.base_encoder_zero == 0.12345):
+               self.arm.calibrate_base()
 
-         else:
-            self.arm.set_base_position(self.arm.base_desired_position)
+            else:
+               self.arm.set_base_position(self.arm.base_desired_position)
 
-         """
+      
+      
 
-         print(f"elevator (z, p, d) = {self.arm.elevator_encoder_zero}, {self.arm.elevator_encoder_zero - self.arm.get_elevator_motor_encoder()}, {self.arm.elevator_desired_position} \
-              base (z, p, d) = {self.arm.base_encoder_zero}, {self.arm.base_encoder_zero - self.arm.get_base_motor_encoder()}, {self.arm.base_desired_position}")
+         #print(f"elevator (z, p, d) = {self.arm.elevator_encoder_zero}, {self.arm.elevator_encoder_zero - self.arm.get_elevator_motor_encoder()}, {self.arm.elevator_desired_position}")
+         #print(f"base (z, p, d) = {self.arm.base_encoder_zero}, {self.arm.base_encoder_zero - self.arm.get_base_motor_encoder()}, {self.arm.base_desired_position}")
 
          # check if each part of the robot is enabled or not before checking if buttons pressed, etc.         
          if constants.ENABLE_DRIVING:
@@ -128,75 +131,65 @@ class MyRobot(wpilib.TimedRobot):
             self.drive.absolute_drive(joystick_y, joystick_x, angle, True, constants.DRIVE_MOTOR_POWER_MULTIPLIER)
 
          if constants.ENABLE_ARM:
-            raise_elevator = self.operator_controller.getRawButton(1)
-            lower_elevator = self.operator_controller.getRawButton(2)
+            #lower_arm = self.operator_controller.getRawButton(4)
 
-            lift_arm = self.operator_controller.getRawButton(3)
-            lower_arm = self.operator_controller.getRawButton(4)
+            if self.operator_controller.getRawButton(4):
+               self.auto_cube.pickup_cube(True, True)
 
-            open_cube_arm = self.operator_controller.getRawButton(5)
-            close_cube_arm = self.operator_controller.getRawButton(6)
-
-            lower_cone_arm = self.operator_controller.getRawButton(9)
-            raise_cone_arm = self.operator_controller.getRawButton(10)
-
-
+            
+            # cube ground position
             if self.operator_controller.getRawButton(11):
+               self.arm.elevator_desired_position = 40
+               self.arm.base_desired_position = 7
+
+            # cube one position
+            if self.operator_controller.getRawButton(12):
+               self.arm.elevator_desired_position = 40
+               self.arm.base_desired_position = 27
+
+            # cube two position
+            if self.rotary_buttons.getRawButton(1):
+               self.arm.elevator_desired_position = 40
+               self.arm.base_desired_position = 30
+
+
+             # cone one starting position (first)
+            if self.rotary_buttons.getRawButton(3):
+               self.arm.elevator_desired_position = 5
+               self.arm.base_desired_position = 30
+
+            # cone one lowered elevator position (second)
+            if self.rotary_buttons.getRawButton(2):
                self.arm.elevator_desired_position = 125
 
-            if self.operator_controller.getRawButton(12):
-               self.arm.base_desired_position = 100
-
-            if self.rotary_buttons.getRawButton(1):
-               self.arm.elevator_desired_position = 10
-               self.arm.base_desired_position = 10
-
-
-            if raise_elevator:
-               #print("raise elevator")
-               self.arm.set_elevator_speed(0.3)
-
-            elif lower_elevator:
-               #print("lower elevator")
-               self.arm.set_elevator_speed(-0.3)
-
-            else:
-               pass
-               #self.arm.stop_elevator()
-            
-
-            if lift_arm:
-               self.arm.set_base_speed(0.17)
-
-            elif lower_arm:
-               self.arm.set_base_speed(-0.17)
-
-            else:
-               pass
-               #self.arm.stop_base()
+            # cone one lowered arm position (third)
+            if self.rotary_buttons.getRawButton(4):
+               self.arm.base_desired_position = 15
 
 
 
+            # cone two starting position (first)
+            if self.operator_controller.getRawButton(1):
+               self.arm.elevator_desired_position = 5
+               self.arm.base_desired_position = 30
 
-            if open_cube_arm:
-               print("opening cube arm")
-               self.arm.open_cube_arm()
+            # cone two lowered elevator position (second)
+            if self.operator_controller.getRawButton(2):
+               self.arm.elevator_desired_position = 125
 
-            elif close_cube_arm:
-               print("closing cube arm")
-               self.arm.close_cube_arm()
-
+            # cone two lowered arm position (third)
+            if self.operator_controller.getRawButton(3):
+               self.arm.base_desired_position = 25
+               self.arm.lower_cone_arm() 
 
             
-            if raise_cone_arm:
-               print("raising cone arm")
-               self.arm.lift_cone_arm()
+            # elevator top height
+            if self.operator_controller.getRawButton(5):
+               self.arm.elevator_desired_position = 5
 
-            elif lower_cone_arm:
-               print("lowering cone arm")
-               self.arm.lower_cone_arm()
-
-
+            if self.operator_controller.getRawButton(6):
+               self.arm.elevator_desired_position = 100
+               
          if constants.ENABLE_BALANCE:
             pass
 
