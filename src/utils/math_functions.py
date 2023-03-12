@@ -27,6 +27,13 @@ def clamp_trig(value):
    return math.tanh(value)
 
 
+def in_range(value, lower_limit, upper_limit):
+      if (value >= lower_limit) and (value <= upper_limit):
+            return True
+      else:
+            return False
+
+
 def interpolation(value):
       # array of value from -1 to 1 with corresponding value -12 to 12
       # think of as a list of points on a graph

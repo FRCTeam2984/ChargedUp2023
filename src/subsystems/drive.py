@@ -11,10 +11,27 @@ class Drive:
    def __init__(self, _frontLeft : WPI_TalonFX, _frontRight : WPI_TalonFX, _middleLeft : CANSparkMax, _middleRight : CANSparkMax, _backLeft : WPI_TalonFX, _backRight : WPI_TalonFX, _drive_imu : imutil.Imutil, _pid : pid.PID):
       
       # Front and back mecanum wheels are powered Falcon500 motors
+      self.drive_p = 1
+      self.drive_i = 0
+      self.drive_d = 0
+      self.drive_val = 0
+
       self.front_left = _frontLeft
+      self.front_left_pid = pid.PID()
+      self.front_left_pid.set_pid(self.drive_p, self.drive_i, self.drive_d, self.drive_val)
+
       self.front_right = _frontRight
+      self.front_right_pid = pid.PID()
+      self.front_right_pid.set_pid(self.drive_p, self.drive_i, self.drive_d, self.drive_val)
+
       self.back_left = _backLeft
+      self.back_left_pid = pid.PID()
+      self.back_left_pid.set_pid(self.drive_p, self.drive_i, self.drive_d, self.drive_val)
+
       self.back_right = _backRight
+      self.back_right_pid = pid.PID()
+      self.back_right_pid.set_pid(self.drive_p, self.drive_i, self.drive_d, self.drive_val)
+
 
       # Middle omni wheels are powered by Neo550 motors
       self.middle_right = _middleRight
@@ -43,7 +60,7 @@ class Drive:
    # set the speed of the wheels on the right of the robot and includes the middle wheels
    def set_right_speed(self, speed):
       # clamp the speed from -1 to 1
-      speed = math.functions.clamp(speed, -1, 1)
+      speed = math_functions.clamp(speed, -1, 1)
 
       self.front_right.set(speed)
       self.back_right.set(speed)
@@ -56,7 +73,7 @@ class Drive:
 
 
    def stop_drive(self):
-      self.set_speed(0, 0)
+      self.set_speed(0)
 
    def get_yaw(self):
       return self.drive_imu.getYaw()
@@ -134,10 +151,25 @@ class Drive:
       #self.back_left.set((clamped_speed + left_right - steer) * multiplier)
       #self.back_right.set((clamped_speed - left_right + steer) * multiplier)
 
-      self.front_left.set(-(clamped_speed + left_right + steer) * multiplier)
-      self.front_right.set((clamped_speed - left_right - steer) * multiplier)
-      self.back_left.set(-(clamped_speed - left_right + steer) * multiplier)
-      self.back_right.set((clamped_speed + left_right - steer) * multiplier)
+      #self.front_left.set(-(clamped_speed + left_right + steer) * multiplier * 0.5)
+      #self.front_right.set((clamped_speed - left_right - steer) * multiplier * 0.5)
+      #self.back_left.set(-(clamped_speed - left_right + steer) * multiplier * 1)
+      #self.back_right.set((clamped_speed + left_right - steer) * multiplier * 1)
+
+      # speed = (-(clamped_speed + left_right + steer)) * multiplier
+      # current_encoder = encoder()
+      # error = (encoder - prev_encoder) - speed
+      # front_left.set_motor_power(pid.arm_pid(error))
+      # prev_encoder = current_encoder
+
+
+      front_left_speed = (-(clamped_speed + left_right + steer) * multiplier)
+      # end of 3/11 meeting starting PID control for drive
+
+      self.front_left.set(-(clamped_speed + left_right + steer) * multiplier * 0.5)
+      self.front_right.set((clamped_speed - left_right - steer) * multiplier * 0.5)
+      self.back_left.set(-(clamped_speed - left_right + steer) * multiplier * 1)
+      self.back_right.set((clamped_speed + left_right - steer) * multiplier * 1)
 
       # self.middle_left.setVoltage((clamped_speed + steer) * multiplier * 5)
       # self.middle_right.setVoltage((clamped_speed - steer) * multiplier * 5)
