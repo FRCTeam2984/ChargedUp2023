@@ -114,7 +114,7 @@ class Arm:
       actual_encoder = -self.get_elevator_motor_encoder() + self.elevator_encoder_zero
 
       error = desired_encoder_value - actual_encoder
-      adjustment = self.elevator_pid.arm_pid(error) * -1
+      adjustment = self.elevator_pid.keep_integral(error) * -1
       adjustment = math_functions.clamp(adjustment, -0.4, 0.4)
 
       #print(f"elevator_error = {error}, elevator_adj = {adjustment}")
@@ -131,7 +131,7 @@ class Arm:
       actual_encoder = self.get_base_motor_encoder() - self.base_encoder_zero
 
       error = desired_encoder_value - actual_encoder
-      adjustment = self.base_pid.arm_pid(error)
+      adjustment = self.base_pid.keep_integral(error)
       adjustment = math_functions.clamp(adjustment, -0.15, 0.15)
 
       #print(f"base_error = {error}, base_adj = {adjustment}")

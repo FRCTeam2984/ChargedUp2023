@@ -21,7 +21,7 @@ class PID:
             self.previous_input = error
             return power
       
-      def arm_pid(self, error):
+      def keep_integral(self, error):
             power = error * self.p
             #if self.integral > 0 and (error * self.i < 0):
             #      self.integral = 0

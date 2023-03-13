@@ -1,7 +1,7 @@
 # Has modes of driving such as arcade drive, tank drive, mecanum drive, etc.
 # Those driving modes use the simpler functions that turn motors/drivetrains
 
-from ctre import WPI_TalonFX
+from ctre import WPI_TalonFX, TalonFXFeedbackDevice
 from rev import CANSparkMax
 from utils import constants, math_functions, imutil, pid
 import math
@@ -19,18 +19,22 @@ class Drive:
       self.front_left = _frontLeft
       self.front_left_pid = pid.PID()
       self.front_left_pid.set_pid(self.drive_p, self.drive_i, self.drive_d, self.drive_val)
+      self.front_left.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor)
 
       self.front_right = _frontRight
       self.front_right_pid = pid.PID()
       self.front_right_pid.set_pid(self.drive_p, self.drive_i, self.drive_d, self.drive_val)
+      self.front_right.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor)
 
       self.back_left = _backLeft
       self.back_left_pid = pid.PID()
       self.back_left_pid.set_pid(self.drive_p, self.drive_i, self.drive_d, self.drive_val)
+      self.back_left.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor)
 
       self.back_right = _backRight
       self.back_right_pid = pid.PID()
       self.back_right_pid.set_pid(self.drive_p, self.drive_i, self.drive_d, self.drive_val)
+      self.back_right.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor)
 
 
       # Middle omni wheels are powered by Neo550 motors
@@ -131,7 +135,7 @@ class Drive:
       # put delta_angle in a range from -180 to 180 degrees
       delta_angle = ((delta_angle + 180) % 360) - 180
 
-      print(f"current angle = {current_angle}, desired_angle = {desired_angle}")
+      #print(f"current angle = {current_angle}, desired_angle = {desired_angle}")
 
       # set "steer" to zero
       steer = 0
@@ -143,8 +147,12 @@ class Drive:
             else:
                steer = math_functions.clamp(self.pid_secondary(delta_angle), -1, 1)
 
+      # "disabe" rotary controller turning the robot
       #steer = 0
 
+
+
+      # old driving versions (before 3/11)
       # for next year have to manually make sure the signs are good its kinda weird sometimes   
       #self.front_left.set((clamped_speed - left_right - steer) * multiplier)
       #self.front_right.set((clamped_speed + left_right + steer) * multiplier)
@@ -156,20 +164,58 @@ class Drive:
       #self.back_left.set(-(clamped_speed - left_right + steer) * multiplier * 1)
       #self.back_right.set((clamped_speed + left_right - steer) * multiplier * 1)
 
-      # speed = (-(clamped_speed + left_right + steer)) * multiplier
+
+
+      # pseudocode for new pid driving system
+      # speed = (-(clamped_speed + left_right + steer)) * multiplier (probably need to be a larger constant)
       # current_encoder = encoder()
-      # error = (encoder - prev_encoder) - speed
-      # front_left.set_motor_power(pid.arm_pid(error))
+      # error = (current_encoder - prev_encoder)/time(20ms)? - speed
+      # front_left.set_motor_power(pid.keep_integral(error))
       # prev_encoder = current_encoder
 
 
-      front_left_speed = (-(clamped_speed + left_right + steer) * multiplier)
+      # no idea if this code works but i'll give it a try tomorrow. not sure what the correct function is for dealing with the motor encoders/current speed?
       # end of 3/11 meeting starting PID control for drive
+      front_left_desired_speed = (-(clamped_speed + left_right + steer) * multiplier)
+      front_left_current_speed = self.front_left.getSelectedSensorVelocity()
+      front_left_error = front_left_current_speed - front_left_desired_speed
+      front_left_pid = self.front_left_pid.keep_integral(front_left_error)
+      self.front_left.set(front_left_pid)
 
-      self.front_left.set(-(clamped_speed + left_right + steer) * multiplier * 0.5)
-      self.front_right.set((clamped_speed - left_right - steer) * multiplier * 0.5)
-      self.back_left.set(-(clamped_speed - left_right + steer) * multiplier * 1)
-      self.back_right.set((clamped_speed + left_right - steer) * multiplier * 1)
+      front_right_desired_speed = ((clamped_speed - left_right - steer) * multiplier)
+      front_right_current_speed = self.front_right.getSelectedSensorVelocity()
+      front_right_error = front_right_current_speed - front_right_desired_speed
+      front_right_pid = self.front_right_pid.keep_integral(front_right_error)
+      self.front_left.set(front_right_pid)
 
+      back_left_desired_speed = (-(clamped_speed - left_right + steer) * multiplier)
+      back_left_current_speed = self.back_left.getSelectedSensorVelocity()
+      back_left_error = back_left_current_speed - back_left_desired_speed
+      back_left_pid = self.back_left_pid.keep_integral(back_left_error)
+      self.back_left.set(back_left_pid)
+
+      back_right_desired_speed = ((clamped_speed + left_right - steer) * multiplier)
+      back_right_current_speed = self.back_right.getSelectedSensorVelocity()
+      back_right_error = back_right_current_speed - back_right_desired_speed
+      back_right_pid = self.back_right_pid.keep_integral(back_right_error)
+      self.back_right.set(back_right_pid)
+
+
+      # print current speeds from sensors in each motor, then print the pid adjustment for each motor
+      print(f"f_left_speed = {front_left_current_speed}, f_left_pid = {front_left_pid} \
+            f_right_speed = {front_right_current_speed}, f_right_pid = {front_right_pid} \
+            b_left_speed = {back_left_current_speed}, b_left_pid = {back_left_pid} \
+            b_right_speed = {back_right_current_speed}, b_right_pid = {back_right_pid}")
+
+
+      # set front left and back left motors to inverted later
+      # what we had before the new pid stuff (what we had as of end of 3/11 meeting)
+      #self.front_left.set(-(clamped_speed + left_right + steer) * multiplier * 0.5)
+      #self.front_right.set((clamped_speed - left_right - steer) * multiplier * 0.5)
+      #self.back_left.set(-(clamped_speed - left_right + steer) * multiplier * 1)
+      #self.back_right.set((clamped_speed + left_right - steer) * multiplier * 1)
+
+
+      # still need to spin the middle wheels, probably just do this in the balance code
       # self.middle_left.setVoltage((clamped_speed + steer) * multiplier * 5)
       # self.middle_right.setVoltage((clamped_speed - steer) * multiplier * 5)
