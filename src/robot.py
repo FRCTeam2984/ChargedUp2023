@@ -94,6 +94,12 @@ class MyRobot(wpilib.TimedRobot):
       self.operator_controller = wpilib.interfaces.GenericHID(constants.ID_OPERATOR_CONTROLLER)
       self.drive_joystick = wpilib.XboxController(constants.ID_DRIVE_CONTROLLER)
 
+
+      # maybe we need to reset the rotary controller angle in other places too 
+      if constants.ENABLE_DRIVING:
+         self.rotary_controller.reset_angle(self.drive_imu.get_yaw())
+
+
       self.arm.elevator_desired_position = self.arm.elevator_encoder_top
       self.arm.base_desired_position = self.arm.base_encoder_in
 

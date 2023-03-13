@@ -68,9 +68,6 @@ class Cone:
             if (self.able_to_start()):
                self.state = self.LOWERING_ARM
 
-            else:
-               return
-
          elif self.state == self.LOWERING_ARM:
             self.arm.position_ground()
 
@@ -97,7 +94,9 @@ class Cone:
             # check if the arm has been moved back into the robot
             if (self.arm_is_home()):
                self.state = self.FINISHED
-               return 0
+
+
+               
 
       if self.located_cone == constants.CONE_FACING_AWAY:
          if self.state == self.IDLE:
