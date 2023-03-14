@@ -9,6 +9,7 @@ class Imutil(PigeonIMU):
       super().__init__(_parent_motor)
 
    def get_yaw(self):
+      print(f"yaw = {self.getYawPitchRoll()[0]}")
       return self.getYawPitchRoll()[0]
 
    def get_pitch(self):

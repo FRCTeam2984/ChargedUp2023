@@ -30,7 +30,8 @@ CUBE_COLLECT_Y =168738
 CUBE_SERVO_ANGLE = 97287
 
 # drive multipliers/power regulations
-DRIVE_MOTOR_POWER_MULTIPLIER = 1
+# might need to change the constant below for new pid driving system (deals with speeds instead of power)
+DRIVE_MOTOR_POWER_MULTIPLIER = 20000
 DRIVE_MIDDLE_WHEEL_SPEED = 1
 
 #IDs for motors/physical components

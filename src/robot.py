@@ -1,6 +1,6 @@
 import wpilib, rev, ctre
 import math
-from subsystems import arm, drive, networking, rotary_controller
+from subsystems import arm, drive, networking, rotary_controller, camera_led
 
 from utils import math_functions, constants, imutil, pid
 from commands import balance, cone, cube, autonomous
@@ -54,6 +54,10 @@ class MyRobot(wpilib.TimedRobot):
       self.arm = arm.Arm(self.arm_elevator_motor, self.arm_base_motor, self.arm_end_servo_cube, self.arm_end_servo_cone, self.arm_cube_limit_switch, self.elevator_pid, self.base_pid)
       self.balance = balance.Balance(self.drive_imu, self.drive, self.front_additional, self.back_additional)
 
+      self.camera_left_led = wpilib.PWM(2)
+      self.camera_right_led = None
+      self.camera_led = camera_led.Camera_LED(self.camera_left_led, self.camera_right_led)
+
       self.network_receiver = networking.NetworkReciever()
 
       self.auto_cube = cube.Cube(self.arm, self.drive, self.drive_imu, self.timer)
@@ -97,17 +101,19 @@ class MyRobot(wpilib.TimedRobot):
 
       # maybe we need to reset the rotary controller angle in other places too 
       if constants.ENABLE_DRIVING:
-         self.rotary_controller.reset_angle(self.drive_imu.get_yaw())
-
+         print("calibrating rotary controller")
+         # start here tomorrow 3/14
 
       self.arm.elevator_desired_position = self.arm.elevator_encoder_top
       self.arm.base_desired_position = self.arm.base_encoder_in
 
       self.arm.open_cube_arm()
-      self.arm.lift_cone_arm()
+      #self.arm.lift_cone_arm()
 
    def teleopPeriodic(self):
       try:
+         self.camera_led.set_left_led(100)
+
          if (self.arm.elevator_encoder_zero == 0.12345):
             self.arm.calibrate_elevator()
 
@@ -132,7 +138,7 @@ class MyRobot(wpilib.TimedRobot):
             joystick_x = math_functions.interpolation(self.drive_joystick.getRawAxis(0))
             angle = self.rotary_controller.rotary_inputs()
 
-            print(f"speed (y): {joystick_y}, left_right (x): {joystick_x}")
+            #print(f"speed (y): {joystick_y}, left_right (x): {joystick_x}, angle: {angle}")
 
             self.drive.absolute_drive(joystick_y, joystick_x, angle, True, constants.DRIVE_MOTOR_POWER_MULTIPLIER)
 

@@ -9,32 +9,32 @@ import math
 
 class Drive:
    def __init__(self, _frontLeft : WPI_TalonFX, _frontRight : WPI_TalonFX, _middleLeft : CANSparkMax, _middleRight : CANSparkMax, _backLeft : WPI_TalonFX, _backRight : WPI_TalonFX, _drive_imu : imutil.Imutil, _pid : pid.PID):
-      
+    
       # Front and back mecanum wheels are powered Falcon500 motors
-      self.drive_p = 1
-      self.drive_i = 0
-      self.drive_d = 0
+      self.drive_p = 0.25
+      self.drive_i = 0.10
+      self.drive_d = 0.05
       self.drive_val = 0
 
       self.front_left = _frontLeft
       self.front_left_pid = pid.PID()
       self.front_left_pid.set_pid(self.drive_p, self.drive_i, self.drive_d, self.drive_val)
-      self.front_left.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor)
+      #self.front_left.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor)
 
       self.front_right = _frontRight
       self.front_right_pid = pid.PID()
       self.front_right_pid.set_pid(self.drive_p, self.drive_i, self.drive_d, self.drive_val)
-      self.front_right.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor)
+      #self.front_right.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor)
 
       self.back_left = _backLeft
       self.back_left_pid = pid.PID()
       self.back_left_pid.set_pid(self.drive_p, self.drive_i, self.drive_d, self.drive_val)
-      self.back_left.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor)
+      #self.back_left.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor)
 
       self.back_right = _backRight
       self.back_right_pid = pid.PID()
       self.back_right_pid.set_pid(self.drive_p, self.drive_i, self.drive_d, self.drive_val)
-      self.back_right.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor)
+      #self.back_right.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor)
 
 
       # Middle omni wheels are powered by Neo550 motors
@@ -128,6 +128,9 @@ class Drive:
    def absolute_drive(self, speed, left_right, desired_angle, normal_drive, multiplier):
       # clamp the speed between -1 and 1 for safety purposes
       clamped_speed = math_functions.clamp(speed, -1, 1)
+      left_right = math_functions.clamp(left_right, -0.5, 0.5)
+
+      #print(f"left right = {left_right}")
       
       # angle calculations
       current_angle = self.drive_imu.getYaw()
@@ -179,33 +182,40 @@ class Drive:
       front_left_desired_speed = (-(clamped_speed + left_right + steer) * multiplier)
       front_left_current_speed = self.front_left.getSelectedSensorVelocity()
       front_left_error = front_left_current_speed - front_left_desired_speed
-      front_left_pid = self.front_left_pid.keep_integral(front_left_error)
-      self.front_left.set(front_left_pid)
-
+      front_left_pid = self.front_left_pid.keep_integral(front_left_error) / 10000
+      self.front_left.set(-front_left_pid)
+      
       front_right_desired_speed = ((clamped_speed - left_right - steer) * multiplier)
       front_right_current_speed = self.front_right.getSelectedSensorVelocity()
       front_right_error = front_right_current_speed - front_right_desired_speed
-      front_right_pid = self.front_right_pid.keep_integral(front_right_error)
-      self.front_left.set(front_right_pid)
+      front_right_pid = self.front_right_pid.keep_integral(front_right_error) / 10000
+      self.front_right.set(-front_right_pid)
 
-      back_left_desired_speed = (-(clamped_speed - left_right + steer) * multiplier)
+      back_left_desired_speed = (-(clamped_speed - left_right + steer) * multiplier) * 1.30
       back_left_current_speed = self.back_left.getSelectedSensorVelocity()
       back_left_error = back_left_current_speed - back_left_desired_speed
-      back_left_pid = self.back_left_pid.keep_integral(back_left_error)
-      self.back_left.set(back_left_pid)
+      back_left_pid = self.back_left_pid.keep_integral(back_left_error) / 10000
+      self.back_left.set(-back_left_pid)
 
-      back_right_desired_speed = ((clamped_speed + left_right - steer) * multiplier)
+      back_right_desired_speed = ((clamped_speed + left_right - steer) * multiplier) * 1.30
       back_right_current_speed = self.back_right.getSelectedSensorVelocity()
       back_right_error = back_right_current_speed - back_right_desired_speed
-      back_right_pid = self.back_right_pid.keep_integral(back_right_error)
-      self.back_right.set(back_right_pid)
+      back_right_pid = self.back_right_pid.keep_integral(back_right_error) / 10000
+      self.back_right.set(-back_right_pid)
 
 
       # print current speeds from sensors in each motor, then print the pid adjustment for each motor
-      print(f"f_left_speed = {front_left_current_speed}, f_left_pid = {front_left_pid} \
-            f_right_speed = {front_right_current_speed}, f_right_pid = {front_right_pid} \
-            b_left_speed = {back_left_current_speed}, b_left_pid = {back_left_pid} \
-            b_right_speed = {back_right_current_speed}, b_right_pid = {back_right_pid}")
+      #print(f"f_left_speed = {front_left_current_speed}, f_left_pid = {front_left_pid} \
+      #      f_right_speed = {front_right_current_speed}, f_right_pid = {front_right_pid} \
+      #      b_left_speed = {back_left_current_speed}, b_left_pid = {back_left_pid} \
+      #      b_right_speed = {back_right_current_speed}, b_right_pid = {back_right_pid}")
+
+      #print(f"f_left_speed = {front_left_current_speed}, f_right_speed = {front_right_current_speed}, b_left_speed = {back_left_current_speed}, b_right_speed = {back_right_current_speed}")
+
+      #print(f"f_left_desired = {front_left_desired_speed}, f_left_current = {front_left_current_speed}, f_left_pid = {front_left_pid}")
+      #print(f"f_right_speed = {front_right_current_speed}, f_right_pid = {front_right_pid}")
+      #print(f"b_left_speed = {back_left_current_speed}, b_left_pid = {back_left_pid}")
+      #print(f"b_right_speed = {back_right_current_speed}, b_right_pid = {back_right_pid}")
 
 
       # set front left and back left motors to inverted later
