@@ -4,8 +4,8 @@ Orientation of the motors is as if you were standing at the back of the robot an
 
 # Enable/disable feature
 # make sure to change whenever testing
-ENABLE_DRIVING = True
-ENABLE_ARM = True
+ENABLE_DRIVING = False
+ENABLE_ARM = False
 ENABLE_BALANCE = False
 
 # positions that a cone can be in

@@ -31,9 +31,6 @@ class MyRobot(wpilib.TimedRobot):
       self.middle_right = rev.CANSparkMax(constants.ID_DRIVE_MIDDLE_RIGHT, rev.CANSparkMaxLowLevel.MotorType.kBrushless)
       self.middle_left = rev.CANSparkMax(constants.ID_DRIVE_MIDDLE_LEFT, rev.CANSparkMaxLowLevel.MotorType.kBrushless)
 
-      self.front_additional = ctre.WPI_TalonSRX(constants.ID_ADDITIONAL_FRONT)
-      self.back_additional = ctre.WPI_TalonSRX(constants.ID_ADDITIONAL_BACK)
-
       # imu and pid stuff to be added below
       # using the middle left motor, even though the middle right one can be used too
       self.imu_talon = ctre.WPI_TalonSRX(constants.ID_IMU_TALON)
@@ -52,7 +49,7 @@ class MyRobot(wpilib.TimedRobot):
 
       self.drive = drive.Drive(self.front_left, self.front_right, self.middle_left, self.middle_right, self.back_left, self.back_right, self.drive_imu, self.pid)
       self.arm = arm.Arm(self.arm_elevator_motor, self.arm_base_motor, self.arm_end_servo_cube, self.arm_end_servo_cone, self.arm_cube_limit_switch, self.elevator_pid, self.base_pid)
-      self.balance = balance.Balance(self.drive_imu, self.drive, self.front_additional, self.back_additional)
+      self.balance = balance.Balance(self.drive, self.drive_imu)
 
       self.camera_left_led = wpilib.PWM(2)
       self.camera_right_led = None
@@ -143,8 +140,6 @@ class MyRobot(wpilib.TimedRobot):
             self.drive.absolute_drive(joystick_y, joystick_x, angle, True, constants.DRIVE_MOTOR_POWER_MULTIPLIER)
 
          if constants.ENABLE_ARM:
-            #lower_arm = self.operator_controller.getRawButton(4)
-
             if self.operator_controller.getRawButton(4):
                self.auto_cube.pickup_cube(True, True)
 
@@ -201,9 +196,15 @@ class MyRobot(wpilib.TimedRobot):
 
             if self.operator_controller.getRawButton(6):
                self.arm.elevator_desired_position = 100
+
+
+            if self.operator_controller.getRawButton(9):
+               self.balance.auto_balance()
                
          if constants.ENABLE_BALANCE:
             pass
+
+         self.network_receiver.test()
 
       except:
          raise

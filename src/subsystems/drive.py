@@ -83,12 +83,15 @@ class Drive:
       return self.drive_imu.getYaw()
 
    # DRIVE FUNCTIONS
-   def arcade_drive(self, joystick_x, joystick_y):
-      left_speed = (joystick_y - joystick_x) * constants.DRIVE_MOTOR_POWER_MULTIPLIER
-      right_speed = (joystick_y + joystick_x) * constants.DRIVE_MOTOR_POWER_MULTIPLIER
+   def arcade_drive(self, joystick_y, joystick_x):
+      left_speed = (joystick_y - joystick_x) * 0.5
+      right_speed = (joystick_y + joystick_x) * 0.5
 
-      self.set_left_speed(left_speed)
-      self.set_right_speed
+      self.front_left.set(left_speed)
+      self.back_left.set(left_speed)
+
+      self.front_right.set(right_speed)
+      self.back_right.set(right_speed)
 
 
    def tank_drive(self, joystick_left, joystick_right):
@@ -128,7 +131,7 @@ class Drive:
    def absolute_drive(self, speed, left_right, desired_angle, normal_drive, multiplier):
       # clamp the speed between -1 and 1 for safety purposes
       clamped_speed = math_functions.clamp(speed, -1, 1)
-      left_right = math_functions.clamp(left_right, -0.5, 0.5)
+      left_right = math_functions.clamp(left_right * 0.5, -1, 1)
 
       #print(f"left right = {left_right}")
       
@@ -151,8 +154,9 @@ class Drive:
                steer = math_functions.clamp(self.pid_secondary(delta_angle), -1, 1)
 
       # "disabe" rotary controller turning the robot
-      #steer = 0
+      # steer = 0
 
+      steer *= 1.6
 
 
       # old driving versions (before 3/11)

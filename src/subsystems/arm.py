@@ -24,7 +24,7 @@ class Arm:
       self.base_desired_position = 0
       self.base_min_limit_switch = self.arm_base_motor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen)
       self.base_encoder = self.arm_base_motor.getEncoder(SparkMaxRelativeEncoder.Type.kHallSensor, 42)
-      self.base_encoder_in = 1
+      self.base_encoder_in = 1.5
       self.base_encoder_out = 30
       self.base_encoder_tolerance = 2
 
