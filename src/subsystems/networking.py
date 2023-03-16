@@ -57,7 +57,15 @@ class NetworkReciever:
          cone_y = self.dashboard.getNumber("cone_y", 0)
 
          return [has_cone, cone_x, cone_y]
-      
+
+   def test(self):
+      cube_there = self.dashboard.getBoolean("cube_there", False)
+
+      counter = self.dashboard.getNumber("counter", 0)
+
+      print(f"sees cube = {cube_there}, counter = {counter}") 
+
+
 # originally wrote using pynetworktables, but we need to use pyntcore
 """
 class NetworkReceiver:

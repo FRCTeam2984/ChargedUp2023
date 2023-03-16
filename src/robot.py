@@ -1,6 +1,6 @@
 import wpilib, rev, ctre
 import math
-from subsystems import arm, drive, networking, rotary_controller
+from subsystems import arm, drive, networking, rotary_controller, camera_led
 
 from utils import math_functions, constants, imutil, pid
 from commands import balance, cone, cube, autonomous
@@ -31,9 +31,6 @@ class MyRobot(wpilib.TimedRobot):
       self.middle_right = rev.CANSparkMax(constants.ID_DRIVE_MIDDLE_RIGHT, rev.CANSparkMaxLowLevel.MotorType.kBrushless)
       self.middle_left = rev.CANSparkMax(constants.ID_DRIVE_MIDDLE_LEFT, rev.CANSparkMaxLowLevel.MotorType.kBrushless)
 
-      self.front_additional = ctre.WPI_TalonSRX(constants.ID_ADDITIONAL_FRONT)
-      self.back_additional = ctre.WPI_TalonSRX(constants.ID_ADDITIONAL_BACK)
-
       # imu and pid stuff to be added below
       # using the middle left motor, even though the middle right one can be used too
       self.imu_talon = ctre.WPI_TalonSRX(constants.ID_IMU_TALON)
@@ -52,7 +49,11 @@ class MyRobot(wpilib.TimedRobot):
 
       self.drive = drive.Drive(self.front_left, self.front_right, self.middle_left, self.middle_right, self.back_left, self.back_right, self.drive_imu, self.pid)
       self.arm = arm.Arm(self.arm_elevator_motor, self.arm_base_motor, self.arm_end_servo_cube, self.arm_end_servo_cone, self.arm_cube_limit_switch, self.elevator_pid, self.base_pid)
-      self.balance = balance.Balance(self.drive_imu, self.drive, self.front_additional, self.back_additional)
+      self.balance = balance.Balance(self.drive, self.drive_imu)
+
+      self.camera_left_led = wpilib.PWM(2)
+      self.camera_right_led = None
+      self.camera_led = camera_led.Camera_LED(self.camera_left_led, self.camera_right_led)
 
       self.network_receiver = networking.NetworkReciever()
 
@@ -97,17 +98,19 @@ class MyRobot(wpilib.TimedRobot):
 
       # maybe we need to reset the rotary controller angle in other places too 
       if constants.ENABLE_DRIVING:
-         self.rotary_controller.reset_angle(self.drive_imu.get_yaw())
-
+         print("calibrating rotary controller")
+         # start here tomorrow 3/14
 
       self.arm.elevator_desired_position = self.arm.elevator_encoder_top
       self.arm.base_desired_position = self.arm.base_encoder_in
 
       self.arm.open_cube_arm()
-      self.arm.lift_cone_arm()
+      #self.arm.lift_cone_arm()
 
    def teleopPeriodic(self):
       try:
+         self.camera_led.set_left_led(100)
+
          if (self.arm.elevator_encoder_zero == 0.12345):
             self.arm.calibrate_elevator()
 
@@ -132,16 +135,13 @@ class MyRobot(wpilib.TimedRobot):
             joystick_x = math_functions.interpolation(self.drive_joystick.getRawAxis(0))
             angle = self.rotary_controller.rotary_inputs()
 
-            print(f"speed (y): {joystick_y}, left_right (x): {joystick_x}")
+            #print(f"speed (y): {joystick_y}, left_right (x): {joystick_x}, angle: {angle}")
 
             self.drive.absolute_drive(joystick_y, joystick_x, angle, True, constants.DRIVE_MOTOR_POWER_MULTIPLIER)
 
          if constants.ENABLE_ARM:
-            #lower_arm = self.operator_controller.getRawButton(4)
-
             if self.operator_controller.getRawButton(4):
                self.auto_cube.pickup_cube(True, True)
-
             
             # cube ground position
             if self.operator_controller.getRawButton(11):
@@ -157,7 +157,6 @@ class MyRobot(wpilib.TimedRobot):
             if self.rotary_buttons.getRawButton(1):
                self.arm.elevator_desired_position = 40
                self.arm.base_desired_position = 30
-
 
              # cone one starting position (first)
             if self.rotary_buttons.getRawButton(3):
@@ -195,9 +194,15 @@ class MyRobot(wpilib.TimedRobot):
 
             if self.operator_controller.getRawButton(6):
                self.arm.elevator_desired_position = 100
+
+
+            if self.operator_controller.getRawButton(9):
+               self.balance.auto_balance()
                
          if constants.ENABLE_BALANCE:
             pass
+
+         self.network_receiver.test()
 
       except:
          raise
