@@ -56,7 +56,6 @@ class MyRobot(wpilib.TimedRobot):
       self.camera_led = camera_led.Camera_LED(self.camera_left_led, self.camera_right_led)
 
       self.network_receiver = networking.NetworkReciever()
-
       self.auto_cube = cube.Cube(self.arm, self.drive, self.drive_imu, self.timer)
 
    def autonomoutInit(self):
@@ -65,7 +64,6 @@ class MyRobot(wpilib.TimedRobot):
       self.AUTO_MODE_ONE = 0
       self.AUTO_MODE_TWO = 0
       self.AUTO_MODE = self.AUTO_MODE_ONE
-
 
    def autonomousPeriodic(self):
       # replace numbers with constants from constants.py file
@@ -172,7 +170,6 @@ class MyRobot(wpilib.TimedRobot):
                self.arm.base_desired_position = 15
 
 
-
             # cone two starting position (first)
             if self.operator_controller.getRawButton(1):
                self.arm.elevator_desired_position = 5
@@ -187,7 +184,7 @@ class MyRobot(wpilib.TimedRobot):
                self.arm.base_desired_position = 25
                self.arm.lower_cone_arm() 
 
-            
+
             # elevator top height
             if self.operator_controller.getRawButton(5):
                self.arm.elevator_desired_position = 5
