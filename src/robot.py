@@ -142,7 +142,6 @@ class MyRobot(wpilib.TimedRobot):
          if constants.ENABLE_ARM:
             if self.operator_controller.getRawButton(4):
                self.auto_cube.pickup_cube(True, True)
-
             
             # cube ground position
             if self.operator_controller.getRawButton(11):
@@ -158,7 +157,6 @@ class MyRobot(wpilib.TimedRobot):
             if self.rotary_buttons.getRawButton(1):
                self.arm.elevator_desired_position = 40
                self.arm.base_desired_position = 30
-
 
              # cone one starting position (first)
             if self.rotary_buttons.getRawButton(3):

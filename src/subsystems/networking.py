@@ -58,10 +58,8 @@ class NetworkReciever:
 
          return [has_cone, cone_x, cone_y]
 
-
    def test(self):
       cube_there = self.dashboard.getBoolean("cube_there", False)
-
 
       counter = self.dashboard.getNumber("counter", 0)
 
