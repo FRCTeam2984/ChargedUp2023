@@ -63,7 +63,7 @@ class NetworkReciever:
 
       counter = self.dashboard.getNumber("counter", 0)
 
-      print(f"sees cube = {cube_there}, counter = {counter}") 
+      #print(f"sees cube = {cube_there}, counter = {counter}") 
 
 
 # originally wrote using pynetworktables, but we need to use pyntcore
