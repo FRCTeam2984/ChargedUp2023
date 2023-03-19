@@ -45,7 +45,7 @@ class Drive:
       self.drive_imu = _drive_imu
 
       self.pid = _pid
-      self.pid.set_pid(0.01, 0.0002, 0.05, 0)
+      self.pid.set_pid(0.007, 0.0002, 0.05, 0)
 
       self.pid_secondary = _pid
       self.pid_secondary.set_pid(0.01, 0.0002, 0.05, 0)
@@ -129,15 +129,22 @@ class Drive:
 
 
    def absolute_drive(self, speed, left_right, desired_angle, normal_drive, multiplier):
+      speed = speed / 4
+      left_right = left_right / 6
+
       # clamp the speed between -1 and 1 for safety purposes
-      clamped_speed = math_functions.clamp(speed, -1, 1)
-      left_right = math_functions.clamp(left_right * 0.5, -1, 1)
+      #clamped_speed = math_functions.clamp(speed, -1, 1)
+      clamped_speed = speed
+      left_right = math_functions.clamp(left_right * 0.5, -1, 1) * -1
 
       #print(f"left right = {left_right}")
       
       # angle calculations
-      current_angle = self.drive_imu.getYaw()
-      delta_angle = desired_angle - current_angle
+      current_angle = self.drive_imu.get_yaw()
+      if type(current_angle) != float or type(desired_angle) != float:
+         delta_angle = 0
+      else:
+         delta_angle = desired_angle - current_angle
       # put delta_angle in a range from -180 to 180 degrees
       delta_angle = ((delta_angle + 180) % 360) - 180
 
@@ -183,6 +190,9 @@ class Drive:
 
       # no idea if this code works but i'll give it a try tomorrow. not sure what the correct function is for dealing with the motor encoders/current speed?
       # end of 3/11 meeting starting PID control for drive
+      #clamped_speed = 0
+      #left_right = 0
+
       front_left_desired_speed = (-(clamped_speed + left_right + steer) * multiplier)
       front_left_current_speed = self.front_left.getSelectedSensorVelocity()
       front_left_error = front_left_current_speed - front_left_desired_speed
@@ -206,7 +216,6 @@ class Drive:
       back_right_error = back_right_current_speed - back_right_desired_speed
       back_right_pid = self.back_right_pid.keep_integral(back_right_error) / 10000
       self.back_right.set(-back_right_pid)
-
 
       # print current speeds from sensors in each motor, then print the pid adjustment for each motor
       #print(f"f_left_speed = {front_left_current_speed}, f_left_pid = {front_left_pid} \

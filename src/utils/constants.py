@@ -4,8 +4,8 @@ Orientation of the motors is as if you were standing at the back of the robot an
 
 # Enable/disable feature
 # make sure to change whenever testing
-ENABLE_DRIVING = False
-ENABLE_ARM = False
+ENABLE_DRIVING = True
+ENABLE_ARM = True
 ENABLE_BALANCE = False
 
 # positions that a cone can be in
@@ -55,9 +55,9 @@ ID_IMU_TALON = 11
 ID_ADDITIONAL_FRONT = 10
 ID_ADDITIONAL_BACK = 11
 
-ID_ROTARY_CONTROLLER = 0
-ID_DRIVE_CONTROLLER = 1
-ID_OPERATOR_CONTROLLER = 1
+ID_ROTARY_CONTROLLER = 1
+ID_DRIVE_CONTROLLER = 0
+ID_OPERATOR_CONTROLLER = 0
 
 # BLUE = cube
 # RED = cone

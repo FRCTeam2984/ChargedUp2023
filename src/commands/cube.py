@@ -71,10 +71,13 @@ class Cube:
 
 
    def raising(self):
+      """
       if self.arm.position_elevator_top():
          return True
       else:
          return False
+      """
+      return True
 
 
    def retrieving(self):
