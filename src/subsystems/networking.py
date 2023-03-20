@@ -36,27 +36,26 @@ class NetworkReciever:
 # Everyone: Attaching large chain down the center of the robot
 
    def find_cube(self):
-      cube_there_left = self.dashboard.getBool("cube_there_left", False)
-      cube_there_right = self.dashboard.getBool("cube_there_right", False)
+      cube_there = self.dashboard.getBoolean("cube_there", False)
 
-      if cube_there_right or cube_there_left:
-         cube_coords_left = (self.dashboard.getNumber("cube_x_left", 0), self.dashboard.getNumber("cube_y_left", 0))
-         cube_coords_right = (self.dashboard.getNumber("cube_x_right", 0), self.dashboard.getNumber("cube_y_right", 0))
-         
-         cube_coords_total = (cube_coords_left[0] + cube_coords_right[0], cube_coords_left[1] + cube_coords_right[1])
-         cube_x = None
-         cube_y = None
+      if cube_there:
+         cube_x = self.dashboard.getNumber("cube_x", 0)
+         cube_y = self.dashboard.getNumber("cube_y", 0) 
+         counter = self.dashboard.getNumber("counter", -1)        
 
-         return [True, cube_x, cube_y]
+         return [True, cube_x, cube_y, counter]
 
    def find_cone(self):
-      has_cone = self.dashboard.getBool("has_cone", False)
+      cone_there = self.dashboard.getBool("cone_there", False)
 
-      if has_cone:
+      if cone_there:
          cone_x = self.dashboard.getNumber("cone_x", 0)
          cone_y = self.dashboard.getNumber("cone_y", 0)
 
-         return [has_cone, cone_x, cone_y]
+         cone_angle = self.dashboard.getNumber("cone_angle", 0)
+         cone_is_upright = self.dashboard.getBoolean("cone_is_upright", False)
+
+         return [True, cone_x, cone_y, cone_angle, cone_is_upright]
 
    def test(self):
       cube_there = self.dashboard.getBoolean("cube_there", False)

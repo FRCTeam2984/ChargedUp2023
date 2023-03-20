@@ -77,6 +77,7 @@ class Drive:
 
 
    def stop_drive(self):
+      print("stop_drive()")
       self.set_speed(0)
 
    def get_yaw(self):
@@ -131,6 +132,8 @@ class Drive:
    def absolute_drive(self, speed, left_right, desired_angle, normal_drive, multiplier):
       speed = speed / 4
       left_right = left_right / 6
+
+      #print(f"absolute drive speed = {speed}")
 
       # clamp the speed between -1 and 1 for safety purposes
       #clamped_speed = math_functions.clamp(speed, -1, 1)

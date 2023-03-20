@@ -71,9 +71,9 @@ class RotaryJoystick(Joystick):
 
 
    def reset_angle(self, angle):
-      #print(f"angle = {angle}")
-      pass
-      #self.angle_offset = angle - self.rotary_inputs()
+      self.angle_offset = 0.0
+      self.angle_offset = angle - self.rotary_inputs()
+      #print(f"calling reset angle, offset = {self.angle_offset}")
    
 
 
