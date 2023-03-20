@@ -24,7 +24,7 @@ class Arm:
       self.base_desired_position = 0
       self.base_min_limit_switch = self.arm_base_motor.getForwardLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen)
       self.base_encoder = self.arm_base_motor.getEncoder(SparkMaxRelativeEncoder.Type.kHallSensor, 42)
-      self.base_encoder_in = 26
+      self.base_encoder_in = 30
       self.base_encoder_out = 3
       self.base_encoder_tolerance = 2
 
@@ -129,7 +129,7 @@ class Arm:
 
       error = desired_encoder_value - actual_encoder
       adjustment = self.base_pid.keep_integral(error) * -1
-      adjustment = math_functions.clamp(adjustment, -0.25, 0.25)
+      adjustment = math_functions.clamp(adjustment, -0.2, 0.2)
 
       #print(f"base_error = {error}, base_adj = {adjustment}, actual_encoder = {actual_encoder}")
 
@@ -176,7 +176,7 @@ class Arm:
 
 
    def base_close_enough(self):
-      current_position = self.get_base_motor_encoder() - self.base_encoder_zero
+      current_position = (self.get_base_motor_encoder() - self.base_encoder_zero) * -1
       result = math_functions.in_range(current_position, self.base_desired_position - self.base_encoder_tolerance, self.base_desired_position + self.base_encoder_tolerance)
 
       #print(f"base_close_enough = {result}, current_position = {current_position}, desired_position = {self.base_desired_position}")

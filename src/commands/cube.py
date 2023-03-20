@@ -3,87 +3,80 @@ from wpilib import Timer
 from subsystems.arm import Arm
 from subsystems.drive import Drive
 from subsystems import networking
-from utils import constants, imutil
+from utils import constants, imutil, math_functions
+
+"""
+1) raise the arm all the way
+2) turn and drive so the cube is in the correct range on screen
+3) open the cube arm and lower the cone arm
+4) lower the arm completely
+5) close the cube arm
+6) raise the arm a bit
+"""
 
 class Cube:
-   def __init__(self, _arm : Arm, _drivetrain : Drive, _drive_imu : imutil.Imutil, _timer : Timer):
+   def __init__(self, _arm : Arm, _drive : Drive, _drive_imu : imutil.Imutil, _network_reciever : networking.NetworkReciever, _timer : Timer):
       self.IDLE = 0
-      self.TURNING = 1
-      self.REACHING = 2
-      self.DRIVING = 3
-      self.GRABBING = 4
-      self.RAISING = 5
-      self.RETRIEVING = 6
+      self.RAISING_ARM = 1
+      self.DRIVING = 2
+      self.PREPARING = 3
+      self.LOWERING = 4
+      self.GRABBING = 5
+      self.RAISING = 6
       self.state = self.IDLE
 
       self.timer = _timer
 
-      #self.networking = networking.NetworkReciever()
+      self.desired_angle = 0.0
+      self.previous_image_count = -1
+
+      self.networking = _network_reciever
       self.drive_imu = _drive_imu
 
       self.arm = _arm
-      self.drivetrain = _drivetrain
+      self.drive = _drive
 
+   def raising_arm(self):
+      self.arm.base_desired_position = 5
 
-   def get_camera_info(self):
-      #x = self.networking.find_cube()[1]
-      #y = self.networking.find_cube()[2]
-
-      x = 0
-      y = 0
-      
-      return [x, y]
-
-   # turn towards the correct angle relative to the cube
-   def turning(self):
-      #self.drivetrain.absolute_drive(0, 0, self.drive_imu + self.get_camera_info()[0] + constants.CUBE_OFFSET, True, constants.DRIVE_MOTOR_POWER_MULTIPLIER)
-      #if abs(self.get_camera_info()[0]) < 5:
-      #   return True
-      pass
-      
-   def arm_rotate(self):
-      self.arm.position_ground()
-      if self.arm.position == self.arm.GROUND:
+      if self.arm.base_close_enough():
          return True
-      else:
-         return False
 
    def driving(self):
-      #self.drivetrain.absolute_drive(.1, 0, self.drive_imu + self.get_camera_info()[0] + constants.CUBE_OFFSET, 1)
-      #if self.get_camera_info()[1] < constants.CUBE_COLLECT_Y:
-      #   return
+      cube_data = self.networking.find_cube()
+
+      x = cube_data[1]
+      y = cube_data[2]
+      counter = cube_data[3]
+
+      if self.previous_image_count != counter:
+         angle_change = (x + 70) * 0.02
+         self.desired_angle = angle_change + self.drive_imu.get_yaw()
+         self.previous_image_count = counter
+
+      forward_speed = (y + 200) * 0.005 * -1
+
+      #print(f"angle_change = {self.desired_angle}, forward_speed = {forward_speed}")
+
+      if cube_data[0]:
+         self.drive.absolute_drive(forward_speed, 0, self.desired_angle, True, constants.DRIVE_MOTOR_POWER_MULTIPLIER)
+         constants.CONTROL_OVERRIDE = True
+
+      if math_functions.in_range(x, -75, -65) and math_functions.in_range(y, -210, -190):
+         return True
+
+   
+   def preparing(self):
       pass
 
+   def lowering(self):
+      pass
 
    def grabbing(self):
-      self.arm.lower_cone_arm()
+      pass
 
-      print(f"timer value = {self.timer.getFPGATimestamp()}, start time = {self.start_time}")
-
-      if self.start_time + 1 < self.timer.getFPGATimestamp():
-         self.arm.close_cube_arm()
-         return True
-
-      #if self.arm.cube_arm_closed_enough():
-      #   return True
-      
-      # add later wait a certain amount of time to close
-
-
-   def raising(self):
-      """
-      if self.arm.position_elevator_top():
-         return True
-      else:
-         return False
-      """
-      return True
-
-
-   def retrieving(self):
-      self.arm.position_home()
-      if self.arm.position == self.arm.HOME:
-         return True
+   def raising_final(self):
+      pass
 
 
    #need  x, y, limit_switch
@@ -95,53 +88,47 @@ class Cube:
             if self.state == self.IDLE:
                # if button_pressed and cube is seen and arm is in default postion
                #self.state = self.TURNING
-               self.state = self.REACHING
-               print("moving to reaching state")
+               self.state = self.RAISING_ARM
+               print("raising arm")
 
 
 
-            elif self.state == self.TURNING: 
-               if self.turning():
-                  self.state = self.REACHING
+            elif self.state == self.RAISING_ARM: 
+               if self.raising_arm():
+                  self.state = self.DRIVING
+                  print("driving")
 
-
-
-            elif self.state == self.REACHING:
-               if self.arm_rotate():
-                 # self.state = self.DRIVING
-                 self.state = self.GRABBING
-                 self.start_time = self.timer.getFPGATimestamp()
-                 print("done reaching")
-  
 
 
             elif self.state == self.DRIVING:
                if self.driving():
+                 self.state = self.PREPARING
+                 print("preparing")
+  
+
+
+            elif self.state == self.PREPARING:
+               if self.preparing():
+                  self.state = self.LOWERING
+                  print("lowering")
+
+
+            elif self.state == self.LOWERING:
+               if self.lowering():
                   self.state = self.GRABBING
-                  self.start_time = self.timer.getFPGATimestamp()
-
-
+                  print("grabbing")
 
             elif self.state == self.GRABBING:
                if self.grabbing():
                   self.state = self.RAISING
-                  print("done grabbing")
-
+                  print("raising")
+         
 
             elif self.state == self.RAISING:
-               if self.raising():
-                  self.state = self.RETRIEVING
-                  print("done raising")
-               
-
-
-            elif self.state == self.RETRIEVING:
-               if self.retrieving():
-                  pass
-                  print("done retrieving")
+               if self.raising_final():
+                  print("done!")
                   #green LEDS flash yay
-
 
          else: self.state = self.IDLE
       else: self.state = self.IDLE
-      self.drivetrain.stop_drive()
+      #self.drive.stop_drive()

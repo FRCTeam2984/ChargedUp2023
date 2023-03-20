@@ -10,13 +10,16 @@ class Imutil(PigeonIMU):
 
    def get_yaw(self):
       #print(f"yaw = {self.getYawPitchRoll()[0]}")
-      return self.getYawPitchRoll()[0]
+      return self.getYawPitchRoll()[1][0]
+
+   def test(self):
+      return self.getYawPitchRoll()
 
    def get_pitch(self):
-      return self.getYawPitchRoll()[1]
+      return self.getYawPitchRoll()[1][1]
 
    def get_roll(self):
-      return self.getYawPitchRoll()[2]
+      return self.getYawPitchRoll()[1][2]
 
    def check_if_working(self):
       if (self.getState() == PigeonIMU.PigeonState.Ready):

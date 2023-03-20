@@ -2,6 +2,9 @@
 Orientation of the motors is as if you were standing at the back of the robot and looking towards it
 """
 
+CONTROL_OVERRIDE = False
+ARM_OVERRIDE = False
+
 # Enable/disable feature
 # make sure to change whenever testing
 ENABLE_DRIVING = True
