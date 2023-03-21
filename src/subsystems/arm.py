@@ -22,6 +22,7 @@ class Arm:
       self.arm_base_motor = _arm_base_motor
       self.base_encoder_zero = 0.12345
       self.base_desired_position = 0
+      self.base_desired_position_slow = 0
       self.base_min_limit_switch = self.arm_base_motor.getForwardLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen)
       self.base_encoder = self.arm_base_motor.getEncoder(SparkMaxRelativeEncoder.Type.kHallSensor, 42)
       self.base_encoder_in = 30
@@ -31,7 +32,7 @@ class Arm:
       self.arm_end_servo_cube = _arm_end_servo_cube
       self.arm_cube_limit_switch = _arm_cube_limit_switch
       self.cube_servo_min = 0
-      self.cube_servo_max = 135
+      self.cube_servo_max = 150
 
       self.arm_end_servo_cone = _arm_end_servo_cone
       self.cone_servo_min = 120
@@ -127,7 +128,10 @@ class Arm:
       self.base_desired_position = desired_encoder_value
       actual_encoder = -self.get_base_motor_encoder() + self.base_encoder_zero
 
-      error = desired_encoder_value - actual_encoder
+      self.base_desired_position_slow += math_functions.clamp(-self.base_desired_position_slow + desired_encoder_value, -30/100, 30/100)
+      
+
+      error = self.base_desired_position_slow - actual_encoder
       adjustment = self.base_pid.keep_integral(error) * -1
       adjustment = math_functions.clamp(adjustment, -0.2, 0.2)
 

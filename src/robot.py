@@ -58,6 +58,10 @@ class MyRobot(wpilib.TimedRobot):
       self.camera_led = camera_led.Camera_LED(self.camera_left_led, self.camera_right_led)
 
       self.network_receiver = networking.NetworkReciever()
+      self.network_receiver.dashboard.putBoolean("run_cube", True)
+      self.network_receiver.dashboard.putBoolean("run_cone", True)
+      self.network_receiver.dashboard.putBoolean("run_apriltag", True)
+
       self.auto_cube = cube.Cube(self.arm, self.drive, self.drive_imu, self.network_receiver, self.timer)
 
       self.autonomous_switch_left = wpilib.DigitalInput(2)
@@ -65,15 +69,6 @@ class MyRobot(wpilib.TimedRobot):
       # both high = straight
       # right high left low go left
       # left high right low go right
-
-      while not wpilib.Joystick(constants.ID_ROTARY_CONTROLLER).getRawButton(12) or wpilib.Joystick(constants.ID_OPERATOR_CONTROLLER).getRawButton(12):
-         # switch operator and rotary ids
-         temp = constants.ID_OPERATOR_CONTROLLER
-         constants.ID_OPERATOR_CONTROLLER = constants.ID_ROTARY_CONTROLLER
-         constants.ID_ROTARY_CONTROLLER = temp
-
-         print(f"operator = {constants.ID_OPERATOR_CONTROLLER}, rotary = {constants.ID_ROTARY_CONTROLLER}")
-
 
       self.rotary_controller = rotary_controller.RotaryJoystick(constants.ID_ROTARY_CONTROLLER)
       self.rotary_buttons = wpilib.interfaces.GenericHID(constants.ID_ROTARY_CONTROLLER)
@@ -88,7 +83,9 @@ class MyRobot(wpilib.TimedRobot):
       self.AUTO_MODE_ONE = 0
       self.AUTO_MODE = self.AUTO_MODE_ONE
 
-      self.drive_imu_init = 0.0
+      self.drive_imu_init = self.drive_imu.get_yaw()
+
+      self.rotary_controller.reset_angle(self.drive_imu.get_yaw())
       
    def autonomousPeriodic(self):
       constants.CONTROL_OVERRIDE = False
@@ -102,6 +99,15 @@ class MyRobot(wpilib.TimedRobot):
          self.rotary_controller.reset_angle(self.drive_imu_init)"""
 
    def teleopInit(self):
+      while not wpilib.Joystick(constants.ID_ROTARY_CONTROLLER).getRawButton(12) or wpilib.Joystick(constants.ID_OPERATOR_CONTROLLER).getRawButton(12):
+         # switch operator and rotary ids
+         temp = constants.ID_OPERATOR_CONTROLLER
+         constants.ID_OPERATOR_CONTROLLER = constants.ID_ROTARY_CONTROLLER
+         constants.ID_ROTARY_CONTROLLER = temp
+
+         print(f"operator = {constants.ID_OPERATOR_CONTROLLER}, rotary = {constants.ID_ROTARY_CONTROLLER}")
+
+
       self.arm.base_encoder_zero = 0.12345
 
       # maybe we need to reset the rotary controller angle in other places too
@@ -120,7 +126,6 @@ class MyRobot(wpilib.TimedRobot):
       if self.last_printout + 1 < self.timer.getFPGATimestamp():
          #print(f"cube data = {self.network_receiver.find_cube()}")
          self.last_printout = self.timer.getFPGATimestamp()
-         
 
       try:
          #self.camera_led.set_left_led(100)
@@ -170,11 +175,22 @@ class MyRobot(wpilib.TimedRobot):
 
 
             if self.operator_controller.getRawButton(6):
+               self.network_receiver.dashboard.putBoolean("run_cube", False)
+               self.network_receiver.dashboard.putBoolean("run_cone", False)
+               self.network_receiver.dashboard.putBoolean("run_apriltag", False)
+
                constants.ARM_OVERRIDE = True
 
                cube_data = self.network_receiver.find_cube()
+               cube_is_seen = False
+
                if cube_data != None:
-                  self.auto_cube.pickup_cube(True, cube_data[0])
+                  cube_is_seen = cube_data[0]
+
+               self.auto_cube.pickup_cube(True, cube_is_seen)
+            
+            else:
+               self.auto_cube.state = self.auto_cube.IDLE
 
             """if self.operator_controller.getRawButton(1):
                self.arm.set_base_speed(0.2)
