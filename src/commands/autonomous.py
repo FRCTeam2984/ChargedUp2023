@@ -50,13 +50,15 @@ class Autonomous:
    def moving_left(self, drive_imu_init):
       self.drive.absolute_drive(0, -3.5, drive_imu_init, True, constants.DRIVE_MOTOR_POWER_MULTIPLIER)
 
-      if self.start_time + 5 < self.timer.getFPGATimestamp():
+      print(f"drive_imu_init = {drive_imu_init}, imu yaw = {self.drive.drive_imu.get_yaw()}")
+
+      if self.start_time + 5.5 < self.timer.getFPGATimestamp():
          return True
 
    def moving_right(self, drive_imu_init):
       self.drive.absolute_drive(0, 3.5, drive_imu_init, True, constants.DRIVE_MOTOR_POWER_MULTIPLIER)
 
-      if self.start_time + 5 < self.timer.getFPGATimestamp():
+      if self.start_time + 5.5 < self.timer.getFPGATimestamp():
          return True
 
 
@@ -79,11 +81,12 @@ class Autonomous:
       if self.auto_stage == self.AUTO_IDLE:
             # check that we are good to start autonomous
             self.auto_stage = self.AUTO_PLACING_PIECE
-            self.arm.base_encoder_zero = self.arm.get_base_motor_encoder() + 8
+            self.arm.base_encoder_zero = self.arm.get_base_motor_encoder() + 10
             self.start_time = self.timer.getFPGATimestamp()
 
       elif self.auto_stage == self.AUTO_PLACING_PIECE:
          if self.placing_piece():
+            print("done placing")
             # left high right low
             if self.left_switch.get() and not self.right_switch.get():
                self.auto_stage = self.AUTO_MOVING_RIGHT
@@ -98,7 +101,6 @@ class Autonomous:
                print("starting to move straight back")
 
             self.start_time = self.timer.getFPGATimestamp()
-            print("done placing")
 
       elif self.auto_stage == self.AUTO_MOVING_LEFT:
          if self.moving_left(drive_imu_init):

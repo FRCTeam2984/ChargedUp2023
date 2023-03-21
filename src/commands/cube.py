@@ -19,13 +19,14 @@ class Cube:
       self.IDLE = 0
       self.RAISING_ARM = 1
       self.DRIVING = 2
-      self.PREPARING = 3
       self.LOWERING = 4
-      self.GRABBING = 5
-      self.RAISING = 6
+      self.WAITING = 5
+      self.GRABBING = 6
+      self.RAISING = 7
       self.state = self.IDLE
 
       self.timer = _timer
+      self.start_time = 0.0
 
       self.desired_angle = 0.0
       self.previous_image_count = -1
@@ -39,6 +40,9 @@ class Cube:
    def raising_arm(self):
       self.arm.base_desired_position = 5
 
+      self.arm.lower_cone_arm()
+      self.arm.open_cube_arm()
+
       if self.arm.base_close_enough():
          return True
 
@@ -46,15 +50,31 @@ class Cube:
       cube_data = self.networking.find_cube()
 
       x = cube_data[1]
-      y = cube_data[2]
+      y = cube_data[2] + 195
       counter = cube_data[3]
 
       if self.previous_image_count != counter:
-         angle_change = (x + 70) * 0.02
+         angle_change = (x + 70) * 0.15
          self.desired_angle = angle_change + self.drive_imu.get_yaw()
          self.previous_image_count = counter
+         #print(f"cube data = {cube_data}")
 
-      forward_speed = (y + 200) * 0.005 * -1
+      forward_speed = 0
+      if y < -50:
+         forward_speed = 1.5
+      elif y < -30:
+         forward_speed = 0.6
+      elif y > -30 and y < -2:
+         forward_speed = 0.5
+      elif y > 50:
+         forward_speed = -1.5
+      elif y > 30:
+         forward_speed = -0.6
+      elif y < 30 and y > 2:
+         forward_speed = -0.5
+      
+      
+      #forward_speed = (y + 200) * 0.005 * -1
 
       #print(f"angle_change = {self.desired_angle}, forward_speed = {forward_speed}")
 
@@ -62,26 +82,41 @@ class Cube:
          self.drive.absolute_drive(forward_speed, 0, self.desired_angle, True, constants.DRIVE_MOTOR_POWER_MULTIPLIER)
          constants.CONTROL_OVERRIDE = True
 
-      if math_functions.in_range(x, -75, -65) and math_functions.in_range(y, -210, -190):
+      print(f"x = {x}, y = {y}")
+      if math_functions.in_range(x, -80, -65) and math_functions.in_range(y, -3, 3):
          return True
 
-   
-   def preparing(self):
-      pass
 
    def lowering(self):
-      pass
+      self.arm.base_desired_position = 27
+
+      if self.arm.base_close_enough():
+         return True
+
+   def waiting(self):
+      if self.start_time + 0.75 < self.timer.getFPGATimestamp():
+         return True
 
    def grabbing(self):
-      pass
+      self.arm.close_cube_arm()
+
+      if self.start_time + 0.5 < self.timer.getFPGATimestamp():
+         return True
 
    def raising_final(self):
-      pass
+      self.arm.base_desired_position = 15
+
+      if self.arm.base_close_enough():
+         return True
 
 
    #need  x, y, limit_switch
    def pickup_cube(self, button_is_pressed, cube_is_seen):
       if button_is_pressed:
+
+         if self.state == self.IDLE:
+            self.arm.base_desired_position = 3
+
          if cube_is_seen:
             # idle, reaching, grabbing, retreiving, stop
             # arm_rotating, grabbing, retreiving
@@ -92,37 +127,37 @@ class Cube:
                print("raising arm")
 
 
-
             elif self.state == self.RAISING_ARM: 
                if self.raising_arm():
                   self.state = self.DRIVING
                   print("driving")
 
 
-
             elif self.state == self.DRIVING:
                if self.driving():
-                 self.state = self.PREPARING
-                 print("preparing")
-  
-
-
-            elif self.state == self.PREPARING:
-               if self.preparing():
-                  self.state = self.LOWERING
-                  print("lowering")
-
+                 self.state = self.LOWERING
+                 print("lowering")
+                 self.start_time = self.timer.getFPGATimestamp()
 
             elif self.state == self.LOWERING:
                if self.lowering():
+                  self.state = self.WAITING
+                  print("waiting")
+                  self.start_time = self.timer.getFPGATimestamp()
+
+            elif self.state == self.WAITING:
+               print(f"start time = {self.start_time}, current time = {self.timer.getFPGATimestamp()}, arm = {self.arm.base_desired_position}")
+
+               if self.waiting():
                   self.state = self.GRABBING
                   print("grabbing")
+                  self.start_time = self.timer.getFPGATimestamp()
 
             elif self.state == self.GRABBING:
                if self.grabbing():
                   self.state = self.RAISING
                   print("raising")
-         
+                  self.start_time = self.timer.getFPGATimestamp()
 
             elif self.state == self.RAISING:
                if self.raising_final():
