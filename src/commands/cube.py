@@ -49,12 +49,12 @@ class Cube:
    def driving(self):
       cube_data = self.networking.find_cube()
 
-      x = cube_data[1]
-      y = cube_data[2] + 195
+      x = cube_data[1] + 62
+      y = cube_data[2] + 180
       counter = cube_data[3]
 
       if self.previous_image_count != counter:
-         angle_change = (x + 70) * 0.15
+         angle_change = x * 0.15
          self.desired_angle = angle_change + self.drive_imu.get_yaw()
          self.previous_image_count = counter
          #print(f"cube data = {cube_data}")
@@ -65,13 +65,13 @@ class Cube:
       elif y < -30:
          forward_speed = 0.6
       elif y > -30 and y < -2:
-         forward_speed = 0.5
+         forward_speed = 0.45
       elif y > 50:
          forward_speed = -1.5
       elif y > 30:
          forward_speed = -0.6
       elif y < 30 and y > 2:
-         forward_speed = -0.5
+         forward_speed = -0.45
       
       
       #forward_speed = (y + 200) * 0.005 * -1
@@ -83,18 +83,18 @@ class Cube:
          constants.CONTROL_OVERRIDE = True
 
       print(f"x = {x}, y = {y}")
-      if math_functions.in_range(x, -80, -65) and math_functions.in_range(y, -3, 3):
+      if math_functions.in_range(x, -7, 7) and math_functions.in_range(y, -3, 3):
          return True
 
 
    def lowering(self):
-      self.arm.base_desired_position = 27
+      self.arm.base_desired_position = 28
 
       if self.arm.base_close_enough():
          return True
 
    def waiting(self):
-      if self.start_time + 0.75 < self.timer.getFPGATimestamp():
+      if self.start_time + 0.5 < self.timer.getFPGATimestamp():
          return True
 
    def grabbing(self):

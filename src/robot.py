@@ -54,8 +54,7 @@ class MyRobot(wpilib.TimedRobot):
       self.balance = balance.Balance(self.drive, self.drive_imu)
 
       self.camera_left_led = wpilib.PWM(2)
-      self.camera_right_led = None
-      self.camera_led = camera_led.Camera_LED(self.camera_left_led, self.camera_right_led)
+      self.camera_led = camera_led.Camera_LED(self.camera_left_led)
 
       self.network_receiver = networking.NetworkReciever()
       self.network_receiver.dashboard.putBoolean("run_cube", True)
@@ -63,6 +62,10 @@ class MyRobot(wpilib.TimedRobot):
       self.network_receiver.dashboard.putBoolean("run_apriltag", True)
 
       self.auto_cube = cube.Cube(self.arm, self.drive, self.drive_imu, self.network_receiver, self.timer)
+      self.DROP_IDLE = 0
+      self.DROP_MOVING = 1
+      self.cube_dropoff_state = self.DROP_IDLE
+
 
       self.autonomous_switch_left = wpilib.DigitalInput(2)
       self.autonmous_switch_right = wpilib.DigitalInput(1)
@@ -124,7 +127,7 @@ class MyRobot(wpilib.TimedRobot):
       constants.CONTROL_OVERRIDE = False
 
       if self.last_printout + 1 < self.timer.getFPGATimestamp():
-         #print(f"cube data = {self.network_receiver.find_cube()}")
+         print(f"cube data = {self.network_receiver.find_cube()}")
          self.last_printout = self.timer.getFPGATimestamp()
 
       try:
@@ -160,21 +163,52 @@ class MyRobot(wpilib.TimedRobot):
 
             # get ready to pick up cube
             if self.operator_controller.getRawButton(1):
-               self.arm.open_cube_arm()
-               self.arm.lift_cone_arm()
+               self.arm_desired_temp = 3
 
             if self.operator_controller.getRawButton(2):
-               self.arm.lower_cone_arm()
+               self.arm_desired_temp = 8
 
             # close cube arm
             if self.operator_controller.getRawButton(3):
-               self.arm.close_cube_arm()
+               self.arm_desired_temp = 22
+
+            if self.operator_controller.getRawButton(9):
+               self.arm.lift_cone_arm()
+
+            if self.operator_controller.getRawButton(7):
+               self.arm.lower_cone_arm()
+            
 
             if self.operator_controller.getRawButton(10):
                self.arm_desired_temp = 10.5
+               self.arm.lower_cone_arm()
+               self.camera_led.set_led(20)
+            else:
+               self.camera_led.set_led(0)
 
 
             if self.operator_controller.getRawButton(6):
+               self.cube_dropoff_state = self.DROP_MOVING
+               self.arm.close_cube_arm()
+               self.arm.base_desired_position = 5
+            
+            elif self.operator_controller.getRawButton(5):
+               self.cube_dropoff_state = self.DROP_MOVING
+               self.arm.close_cube_arm()
+               self.arm.base_desired_position = 10
+
+            elif self.operator_controller.getRawButton(4):
+               self.cube_dropoff_state = self.DROP_MOVING
+               self.arm.close_cube_arm()
+               self.arm.base_desired_position = 22
+
+            elif self.cube_dropoff_state == self.DROP_MOVING:
+               self.cube_dropoff_state = self.DROP_IDLE
+               self.arm.open_cube_arm()
+
+   
+
+            if self.operator_controller.getRawButton(12):
                self.network_receiver.dashboard.putBoolean("run_cube", False)
                self.network_receiver.dashboard.putBoolean("run_cone", False)
                self.network_receiver.dashboard.putBoolean("run_apriltag", False)

@@ -32,7 +32,7 @@ class Arm:
       self.arm_end_servo_cube = _arm_end_servo_cube
       self.arm_cube_limit_switch = _arm_cube_limit_switch
       self.cube_servo_min = 0
-      self.cube_servo_max = 150
+      self.cube_servo_max = 180
 
       self.arm_end_servo_cone = _arm_end_servo_cone
       self.cone_servo_min = 120
