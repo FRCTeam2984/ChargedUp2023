@@ -66,6 +66,9 @@ class MyRobot(wpilib.TimedRobot):
       self.DROP_MOVING = 1
       self.cube_dropoff_state = self.DROP_IDLE
 
+      self.CONE_IDLE = 0
+      self.CONE_GRABBING = 1
+      self.cone_pickup_state = self.CONE_IDLE
 
       self.autonomous_switch_left = wpilib.DigitalInput(2)
       self.autonmous_switch_right = wpilib.DigitalInput(1)
@@ -125,6 +128,7 @@ class MyRobot(wpilib.TimedRobot):
 
    def teleopPeriodic(self):
       constants.CONTROL_OVERRIDE = False
+      constants.ARM_OVERRIDE = False
 
       if self.last_printout + 1 < self.timer.getFPGATimestamp():
          print(f"cube data = {self.network_receiver.find_cube()}")
@@ -145,12 +149,6 @@ class MyRobot(wpilib.TimedRobot):
             else:
                self.arm.set_base_position(self.arm.base_desired_position)"""
 
-         if (self.arm.base_encoder_zero == 0.12345):
-            self.arm.calibrate_base()
-
-         else:
-            self.arm.set_base_position(self.arm.base_desired_position)
-
          #print(f"elevator (z, p, d) = {self.arm.elevator_encoder_zero}, {self.arm.elevator_encoder_zero - self.arm.get_elevator_motor_encoder()}, {self.arm.elevator_desired_position}")
          #print(f"base (z, p, d) = {self.arm.base_encoder_zero}, {self.arm.base_encoder_zero - self.arm.get_base_motor_encoder()}, {self.arm.base_desired_position}")
 
@@ -158,19 +156,18 @@ class MyRobot(wpilib.TimedRobot):
             arm_controller_position = self.drive_joystick.getRawAxis(2)
             #print(f"arm_controller_position = {arm_controller_position}")
 
-            self.arm_desired_temp = self.arm.base_encoder_in * arm_controller_position
-            #print(f"arm desired position = {self.arm.base_desired_position}")
-
             # get ready to pick up cube
             if self.operator_controller.getRawButton(1):
-               self.arm_desired_temp = 3
+               self.arm.base_desired_position = 1
+               constants.ARM_OVERRIDE = True
 
             if self.operator_controller.getRawButton(2):
-               self.arm_desired_temp = 8
+               self.arm.base_desired_position = 8
+               constants.ARM_OVERRIDE = True
 
-            # close cube arm
             if self.operator_controller.getRawButton(3):
-               self.arm_desired_temp = 22
+               self.arm.base_desired_position = 22
+               constants.ARM_OVERRIDE = True
 
             if self.operator_controller.getRawButton(9):
                self.arm.lift_cone_arm()
@@ -180,38 +177,54 @@ class MyRobot(wpilib.TimedRobot):
             
 
             if self.operator_controller.getRawButton(10):
-               self.arm_desired_temp = 10.5
+               constants.ARM_OVERRIDE = True
+
+               self.arm.base_desired_position = 10.5
                self.arm.lower_cone_arm()
                self.camera_led.set_led(20)
-            else:
+
+               self.cone_pickup_state = self.CONE_GRABBING
+            
+            elif self.cone_pickup_state == self.CONE_GRABBING:
                self.camera_led.set_led(0)
+               self.arm.base_desired_position = 15
+               self.cone_pickup_state = self.CONE_IDLE
+               self.arm.lift_cone_arm()
 
 
             if self.operator_controller.getRawButton(6):
+               constants.ARM_OVERRIDE = True
+
                self.cube_dropoff_state = self.DROP_MOVING
                self.arm.close_cube_arm()
                self.arm.base_desired_position = 5
             
             elif self.operator_controller.getRawButton(5):
+               constants.ARM_OVERRIDE = True
+
                self.cube_dropoff_state = self.DROP_MOVING
                self.arm.close_cube_arm()
                self.arm.base_desired_position = 10
 
             elif self.operator_controller.getRawButton(4):
+               constants.ARM_OVERRIDE = True
+
                self.cube_dropoff_state = self.DROP_MOVING
                self.arm.close_cube_arm()
                self.arm.base_desired_position = 22
 
             elif self.cube_dropoff_state == self.DROP_MOVING:
+               constants.ARM_OVERRIDE = True
+
                self.cube_dropoff_state = self.DROP_IDLE
                self.arm.open_cube_arm()
 
-   
+
 
             if self.operator_controller.getRawButton(12):
-               self.network_receiver.dashboard.putBoolean("run_cube", False)
-               self.network_receiver.dashboard.putBoolean("run_cone", False)
-               self.network_receiver.dashboard.putBoolean("run_apriltag", False)
+               #self.network_receiver.dashboard.putBoolean("run_cube", False)
+               #self.network_receiver.dashboard.putBoolean("run_cone", False)
+               #self.network_receiver.dashboard.putBoolean("run_apriltag", False)
 
                constants.ARM_OVERRIDE = True
 
@@ -225,6 +238,7 @@ class MyRobot(wpilib.TimedRobot):
             
             else:
                self.auto_cube.state = self.auto_cube.IDLE
+
 
             """if self.operator_controller.getRawButton(1):
                self.arm.set_base_speed(0.2)
@@ -296,6 +310,19 @@ class MyRobot(wpilib.TimedRobot):
 
             if self.operator_controller.getRawButton(9):
                self.balance.auto_balance()"""
+         
+         if not constants.ARM_OVERRIDE:
+            if self.operator_controller.getRawButton(8):
+               self.arm.base_desired_position = self.arm.base_encoder_in * arm_controller_position
+               #print(f"arm desired position = {self.arm.base_desired_position}")
+
+
+         if (self.arm.base_encoder_zero == 0.12345):
+            self.arm.calibrate_base()
+
+         else:
+            self.arm.set_base_position(self.arm.base_desired_position)
+
 
 
          
@@ -324,10 +351,6 @@ class MyRobot(wpilib.TimedRobot):
 
          if constants.ENABLE_BALANCE:
             pass
-
-         if not constants.ARM_OVERRIDE:
-            self.arm.base_desired_position = self.arm_desired_temp
-               
 
          #self.network_receiver.test()
 

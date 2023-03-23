@@ -31,8 +31,8 @@ class Arm:
 
       self.arm_end_servo_cube = _arm_end_servo_cube
       self.arm_cube_limit_switch = _arm_cube_limit_switch
-      self.cube_servo_min = 0
-      self.cube_servo_max = 180
+      self.cube_servo_min = 160
+      self.cube_servo_max = 25
 
       self.arm_end_servo_cone = _arm_end_servo_cone
       self.cone_servo_min = 120
@@ -133,7 +133,7 @@ class Arm:
 
       error = self.base_desired_position_slow - actual_encoder
       adjustment = self.base_pid.keep_integral(error) * -1
-      adjustment = math_functions.clamp(adjustment, -0.2, 0.2)
+      adjustment = math_functions.clamp(adjustment, -0.25, 0.25)
 
       #print(f"base_error = {error}, base_adj = {adjustment}, actual_encoder = {actual_encoder}")
 
