@@ -32,7 +32,7 @@ class Arm:
       self.arm_end_servo_cube = _arm_end_servo_cube
       self.arm_cube_limit_switch = _arm_cube_limit_switch
       self.cube_servo_min = 160
-      self.cube_servo_max = 25
+      self.cube_servo_max = 15
 
       self.arm_end_servo_cone = _arm_end_servo_cone
       self.cone_servo_min = 120
@@ -42,8 +42,7 @@ class Arm:
       #self.elevator_pid.set_pid(0.02, 0.0004, 0.05, 0)
 
       self.base_pid = _base_pid
-      self.base_pid.set_pid(0.1, 0.0016, 0.2, 0)
-
+      self.base_pid.set_pid(0.1, 0.0016, 0.2, 0) 
 
       self.HOME = 0
       self.GROUND = 1

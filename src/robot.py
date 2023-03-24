@@ -175,13 +175,12 @@ class MyRobot(wpilib.TimedRobot):
             if self.operator_controller.getRawButton(7):
                self.arm.lower_cone_arm()
             
-
             if self.operator_controller.getRawButton(10):
                constants.ARM_OVERRIDE = True
 
                self.arm.base_desired_position = 10.5
                self.arm.lower_cone_arm()
-               self.camera_led.set_led(20)
+               self.camera_led.set_led(128)
 
                self.cone_pickup_state = self.CONE_GRABBING
             
