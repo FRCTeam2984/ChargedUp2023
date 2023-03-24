@@ -39,12 +39,12 @@ def interpolation(value):
       # think of as a list of points on a graph
       arr = [ \
       [-1,-12],\
-      [-.85,-6],\
-      [-.6,-4],\
-      [-.15,0],\
-      [.15,0],\
-      [.6,4],\
-      [.85,6],\
+      [-.9,-6],\
+      [-.65,-4],\
+      [-.14,0],\
+      [.14,0],\
+      [.65,4],\
+      [.9,6],\
       [1,12]]
 
       return interpolation_array(value, arr)
