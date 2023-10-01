@@ -164,7 +164,7 @@ class Drive:
                steer = math_functions.clamp(self.pid_secondary(delta_angle), -1, 1)
 
       # "disabe" rotary controller turning the robot
-      # steer = 0
+      #steer = 0
 
       steer *= 1.6
 

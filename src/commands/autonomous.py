@@ -100,6 +100,12 @@ class Autonomous:
                self.auto_stage = self.AUTO_MOVING_OUT_COMMUNITY
                print("starting to move straight back")
 
+
+            """elif not self.left_switch.get() and not self.right_switch.get():
+               print("not doing anything")
+               return -1"""
+            
+
             self.start_time = self.timer.getFPGATimestamp()
 
       elif self.auto_stage == self.AUTO_MOVING_LEFT:
