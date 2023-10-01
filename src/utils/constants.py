@@ -2,8 +2,8 @@
 Orientation of the motors is as if you were standing at the back of the robot and looking towards it
 """
 
-CONTROL_OVERRIDE = False
-ARM_OVERRIDE = False
+CONTROL_OVERRIDE = True
+ARM_OVERRIDE = True
 
 # Enable/disable feature
 # make sure to change whenever testing
@@ -47,8 +47,12 @@ ID_DRIVE_BACK_RIGHT = 4
 ID_DRIVE_MIDDLE_RIGHT = 5
 ID_DRIVE_MIDDLE_LEFT = 6
 
-ID_ARM_ELEVATOR = 7
+# FIX IDS
+ID_ARM_EXTENSION = 7 # replacing elevator
 ID_ARM_BASE = 8
+ID_ARM_CLAW = 9
+
+# not using the following three as of Battle of the Border (fall 2023)
 ID_ARM_SERVO_CUBE = 0
 ID_ARM_SERVO_CONE = 1
 ID_ARM_CUBE_LIMIT_SWITCH = 0
@@ -59,7 +63,7 @@ ID_ADDITIONAL_FRONT = 10
 ID_ADDITIONAL_BACK = 11
 
 ID_ROTARY_CONTROLLER = 1
-ID_DRIVE_CONTROLLER = 0
+#ID_DRIVE_CONTROLLER = 1
 ID_OPERATOR_CONTROLLER = 0
 
 # BLUE = cube

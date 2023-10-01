@@ -1,6 +1,6 @@
 import wpilib, rev, ctre
 import math
-from subsystems import arm, drive, networking, rotary_controller, camera_led
+from subsystems import arm, drive, networking, rotary_controller, camera_led, intake
 
 from utils import math_functions, constants, imutil, pid
 from commands import balance, cone, cube, autonomous
@@ -42,13 +42,15 @@ class MyRobot(wpilib.TimedRobot):
       # Motors and servos that control arm
       #self.arm_elevator_motor = rev.CANSparkMax(constants.ID_ARM_ELEVATOR, rev.CANSparkMaxLowLevel.MotorType.kBrushless)
       self.arm_base_motor = rev.CANSparkMax(constants.ID_ARM_BASE, rev.CANSparkMaxLowLevel.MotorType.kBrushless)
-      self.arm_end_servo_cube = wpilib.Servo(constants.ID_ARM_SERVO_CUBE)
-      self.arm_end_servo_cone = wpilib.Servo(constants.ID_ARM_SERVO_CONE)
-      self.arm_cube_limit_switch = wpilib.DigitalInput(constants.ID_ARM_CUBE_LIMIT_SWITCH)
+      self.arm_extension_motor = ctre.WPI_TalonSRX(constants.ID_ARM_EXTENSION)
+      
+      
+      self.intake_motor = ctre.WPI_TalonSRX(constants.ID_ARM_CLAW)
+      self.intake = intake.Intake(self.intake_motor)
 
       self.drive = drive.Drive(self.front_left, self.front_right, self.middle_left, self.middle_right, self.back_left, self.back_right, self.drive_imu, self.pid)
       
-      self.arm = arm.Arm(self.arm_base_motor, self.arm_end_servo_cube, self.arm_end_servo_cone, self.arm_cube_limit_switch, self.base_pid)
+      self.arm = arm.Arm(self.arm_base_motor, self.arm_extension_motor, self.base_pid)
       self.arm_desired_temp = 0
       
       self.balance = balance.Balance(self.drive, self.drive_imu)
@@ -76,14 +78,10 @@ class MyRobot(wpilib.TimedRobot):
       # right high left low go left
       # left high right low go right
 
-      self.rotary_controller = rotary_controller.RotaryJoystick(constants.ID_ROTARY_CONTROLLER)
-      self.rotary_buttons = wpilib.interfaces.GenericHID(constants.ID_ROTARY_CONTROLLER)
-
-      self.operator_controller = wpilib.interfaces.GenericHID(constants.ID_OPERATOR_CONTROLLER)
-      self.drive_joystick = wpilib.XboxController(constants.ID_DRIVE_CONTROLLER)
-
 
    def autonomousInit(self):
+      # ADD INTAKE FUNCTIONALITY TO AUTONOMOUS MODE - MAKE SURE IT IS WORKING JUST WITH BUTTON PRESSES FIRST AND ALSO BEFORE GOING ON TO DUAL BUTTON DUAL FUNCTION NEAL THINGY
+
       self.autonomous = autonomous.Autonomous(self.drive, self.arm, self.balance, self.autonomous_switch_left, self.autonmous_switch_right)
 
       self.AUTO_MODE_ONE = 0
@@ -91,7 +89,8 @@ class MyRobot(wpilib.TimedRobot):
 
       self.drive_imu_init = self.drive_imu.get_yaw()
 
-      self.rotary_controller.reset_angle(self.drive_imu.get_yaw())
+      #yaw = self.drive_imu.get_yaw()
+      #self.rotary_controller.reset_angle(yaw)
       
    def autonomousPeriodic(self):
       constants.CONTROL_OVERRIDE = False
@@ -107,12 +106,17 @@ class MyRobot(wpilib.TimedRobot):
    def teleopInit(self):
       while not wpilib.Joystick(constants.ID_ROTARY_CONTROLLER).getRawButton(12) or wpilib.Joystick(constants.ID_OPERATOR_CONTROLLER).getRawButton(12):
          # switch operator and rotary ids
-         temp = constants.ID_OPERATOR_CONTROLLER
+         controller_temp = constants.ID_OPERATOR_CONTROLLER
          constants.ID_OPERATOR_CONTROLLER = constants.ID_ROTARY_CONTROLLER
-         constants.ID_ROTARY_CONTROLLER = temp
+         constants.ID_ROTARY_CONTROLLER = controller_temp
 
-         print(f"operator = {constants.ID_OPERATOR_CONTROLLER}, rotary = {constants.ID_ROTARY_CONTROLLER}")
+      self.rotary_controller = rotary_controller.RotaryJoystick(constants.ID_ROTARY_CONTROLLER)
+      self.rotary_buttons = wpilib.interfaces.GenericHID(constants.ID_ROTARY_CONTROLLER)
 
+      self.operator_controller = wpilib.interfaces.GenericHID(constants.ID_OPERATOR_CONTROLLER)
+      self.drive_joystick = wpilib.XboxController(constants.ID_OPERATOR_CONTROLLER)
+
+      print(f"operator = {constants.ID_OPERATOR_CONTROLLER}, rotary = {constants.ID_ROTARY_CONTROLLER}")
 
       self.arm.base_encoder_zero = 0.12345
 
@@ -132,24 +136,8 @@ class MyRobot(wpilib.TimedRobot):
 
       if self.last_printout + 1 < self.timer.getFPGATimestamp():
          print(f"cube data = {self.network_receiver.find_cube()}")
-         self.last_printout = self.timer.getFPGATimestamp()
 
       try:
-         #self.camera_led.set_left_led(100)
-
-         """if (self.arm.elevator_encoder_zero == 0.12345):
-            self.arm.calibrate_elevator()
-
-         else:
-            self.arm.set_elevator_position(self.arm.elevator_desired_position)
-
-            if (self.arm.base_encoder_zero == 0.12345):
-               self.arm.calibrate_base()
-
-            else:
-               self.arm.set_base_position(self.arm.base_desired_position)"""
-
-         #print(f"elevator (z, p, d) = {self.arm.elevator_encoder_zero}, {self.arm.elevator_encoder_zero - self.arm.get_elevator_motor_encoder()}, {self.arm.elevator_desired_position}")
          #print(f"base (z, p, d) = {self.arm.base_encoder_zero}, {self.arm.base_encoder_zero - self.arm.get_base_motor_encoder()}, {self.arm.base_desired_position}")
 
          if constants.ENABLE_ARM:
@@ -158,27 +146,35 @@ class MyRobot(wpilib.TimedRobot):
 
             # get ready to pick up cube
             if self.operator_controller.getRawButton(1):
-               self.arm.base_desired_position = 1
-               constants.ARM_OVERRIDE = True
+               self.intake.state = self.intake.INTAKING_CUBE
 
-            if self.operator_controller.getRawButton(2):
-               self.arm.base_desired_position = 8
-               constants.ARM_OVERRIDE = True
+            elif self.operator_controller.getRawButton(2):
+               self.intake.state = self.intake.INTAKING_CONE
 
-            if self.operator_controller.getRawButton(3):
-               self.arm.base_desired_position = 22
-               constants.ARM_OVERRIDE = True
+            elif self.operator_controller.getRawButton(3):
+               self.intake.state = self.intake.OUTTAKING
 
-            if self.operator_controller.getRawButton(9):
-               self.arm.lift_cone_arm()
+            else:
+               if self.intake.state == self.intake.INTAKING_CUBE or self.intake.state == self.intake.INTAKING_CONE:
+                  self.intake.state = self.intake.HOLDING
 
-            if self.operator_controller.getRawButton(7):
-               self.arm.lower_cone_arm()
-            
+               else:
+                  self.intake.state = self.intake.IDLE
+
+            self.intake.update()
+
+
+            # MAP TWO MORE BUTTONS FOR EXTENDING AND RETRACTING ARM EXTENSION
+            if self.operator_controller.getRawButton(5):
+               self.arm.set_extension_speed(0.15)
+
+            if self.operator_controller.getRawButton(6):
+               self.arm.set_extension_speed(-0.15)
+            """
             if self.operator_controller.getRawButton(10):
                constants.ARM_OVERRIDE = True
 
-               self.arm.base_desired_position = 10.5
+               self.arm.base_desired_position = 9
                self.arm.lower_cone_arm()
                self.camera_led.set_led(128)
 
@@ -219,6 +215,15 @@ class MyRobot(wpilib.TimedRobot):
                self.arm.open_cube_arm()
 
 
+            if self.operator_controller.getRawButton(7):
+               self.intake.spin_in()
+
+            else:
+               self.intake.hold()
+
+            if self.operator_controller.getRawButton(8):
+               self.intake.spin_out()
+
 
             if self.operator_controller.getRawButton(12):
                #self.network_receiver.dashboard.putBoolean("run_cube", False)
@@ -237,79 +242,8 @@ class MyRobot(wpilib.TimedRobot):
             
             else:
                self.auto_cube.state = self.auto_cube.IDLE
-
-
-            """if self.operator_controller.getRawButton(1):
-               self.arm.set_base_speed(0.2)
-
-            elif self.operator_controller.getRawButton(2):
-               self.arm.set_base_speed(-0.2)
-
-            else:
-               self.arm.stop_base()"""
-
-         """if self.operator_controller.getRawButton(4):
-               self.auto_cube.pickup_cube(True, True)
+         """
             
-            # cube ground position
-            if self.operator_controller.getRawButton(11):
-               #self.arm.elevator_desired_position = 40
-               self.arm.base_desired_position = 7
-
-            # cube one position
-            if self.operator_controller.getRawButton(12):
-               #self.arm.elevator_desired_position = 40
-               self.arm.base_desired_position = 27
-
-            # cube two position
-            if self.rotary_buttons.getRawButton(1):
-               #self.arm.elevator_desired_position = 40
-               self.arm.base_desired_position = 30
-
-             # cone one starting position (first)
-            if self.rotary_buttons.getRawButton(3):
-               #self.arm.elevator_desired_position = 5
-               self.arm.base_desired_position = 30
-
-            # cone one lowered elevator position (second)
-            if self.rotary_buttons.getRawButton(2):
-               #self.arm.elevator_desired_position = 125
-               pass
-
-            # cone one lowered arm position (third)
-            if self.rotary_buttons.getRawButton(4):
-               self.arm.base_desired_position = 15
-
-
-            # cone two starting position (first)
-            if self.operator_controller.getRawButton(1):
-               #self.arm.elevator_desired_position = 5
-               self.arm.base_desired_position = 30
-
-            # cone two lowered elevator position (second)
-            if self.operator_controller.getRawButton(2):
-               #self.arm.elevator_desired_position = 125
-               pass
-
-            # cone two lowered arm position (third)
-            if self.operator_controller.getRawButton(3):
-               self.arm.base_desired_position = 25
-               self.arm.lower_cone_arm() 
-
-
-            # elevator top height
-            if self.operator_controller.getRawButton(5):
-               #self.arm.elevator_desired_position = 5
-               pass
-
-            if self.operator_controller.getRawButton(6):
-               #self.arm.elevator_desired_position = 100
-               pass
-
-
-            if self.operator_controller.getRawButton(9):
-               self.balance.auto_balance()"""
-         
          if not constants.ARM_OVERRIDE:
             if self.operator_controller.getRawButton(8):
                self.arm.base_desired_position = self.arm.base_encoder_in * arm_controller_position
@@ -322,8 +256,6 @@ class MyRobot(wpilib.TimedRobot):
          else:
             self.arm.set_base_position(self.arm.base_desired_position)
 
-
-
          
          # check if each part of the robot is enabled or not before checking if buttons pressed, etc.         
          if constants.ENABLE_DRIVING:
@@ -331,7 +263,10 @@ class MyRobot(wpilib.TimedRobot):
             joystick_x = math_functions.interpolation(self.drive_joystick.getRawAxis(0))
             angle = self.rotary_controller.rotary_inputs()
 
-            #print(f"speed (y): {joystick_y}, left_right (x): {joystick_x}, angle: {angle}, arm_controller = {self.drive_joystick.getRawAxis(2)}")
+            if self.last_printout + 1 < self.timer.getFPGATimestamp():
+               #print(f"cube data = {self.network_receiver.find_cube()}")
+               #print(f"speed (y): {joystick_y}, left_right (x): {joystick_x}, angle: {angle}")
+               self.last_printout = self.timer.getFPGATimestamp()
 
             #print(f"imu test = {self.drive_imu.test}")
 
