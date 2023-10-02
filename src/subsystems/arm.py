@@ -4,13 +4,13 @@
 from wpilib import Servo, DigitalInput
 from rev import CANSparkMax, SparkMaxLimitSwitch
 from rev._rev import SparkMaxRelativeEncoder
-from ctre import WPI_VictorSPX
+from ctre import WPI_TalonSRX
 
 from utils import math_functions, pid
 # maybe we need to use PID in arm control to get accurate positions and hold it there
 
 class Arm:
-   def __init__(self, _arm_base_motor : CANSparkMax, _arm_extension_motor : WPI_VictorSPX, _base_pid : pid.PID):
+   def __init__(self, _arm_base_motor : CANSparkMax, _arm_extension_motor : WPI_TalonSRX, _arm_extension_limit_switch : DigitalInput, _base_pid : pid.PID):
       self.arm_base_motor = _arm_base_motor
       self.base_encoder_zero = 0.12345
       self.base_desired_position = 0
@@ -25,6 +25,7 @@ class Arm:
       self.base_pid.set_pid(0.1, 0.0016, 0.2, 0) 
 
       self.arm_extension_motor = _arm_extension_motor
+      self.arm_extension_limit_switch = _arm_extension_limit_switch
 
       self.HOME = 0
       self.GROUND = 1
@@ -43,7 +44,7 @@ class Arm:
       self.arm_base_motor.set(0)
 
 
-   def set_extension_speed(self, speed):
+   def set_extension_speed(self, speed):      
       clamped_speed = math_functions.clamp(speed, -5, 5)
       self.arm_extension_motor.set(clamped_speed)
 

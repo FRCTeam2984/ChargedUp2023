@@ -1,11 +1,12 @@
-from rev import CANSparkMax, SparkMaxLimitSwitch
+from rev import SparkMaxLimitSwitch
+from ctre import WPI_TalonSRX
 
 class Intake:
-   def __init__(self, _intake_motor : CANSparkMax):
+   def __init__(self, _intake_motor : WPI_TalonSRX):
       self.intake_motor = _intake_motor
 
-      self.cone_intake_speed = 0.75
-      self.cube_intake_speed = 1
+      self.cone_intake_speed = 1
+      self.cube_intake_speed = 0.75
       self.outtake_speed = -1
       self.hold_speed = 0.15
 
