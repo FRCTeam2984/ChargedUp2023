@@ -8,7 +8,7 @@ import math
 
 
 class Drive:
-   def __init__(self, _frontLeft : WPI_TalonFX, _frontRight : WPI_TalonFX, _middleLeft : CANSparkMax, _middleRight : CANSparkMax, _backLeft : WPI_TalonFX, _backRight : WPI_TalonFX, _drive_imu : imutil.Imutil, _pid : pid.PID):
+   def __init__(self, _frontLeft : WPI_TalonFX, _frontRight : WPI_TalonFX, _backLeft : WPI_TalonFX, _backRight : WPI_TalonFX, _drive_imu : imutil.Imutil, _pid : pid.PID):
     
       # Front and back mecanum wheels are powered Falcon500 motors
       self.drive_p = 0.25
@@ -35,11 +35,6 @@ class Drive:
       self.back_right_pid = pid.PID()
       self.back_right_pid.set_pid(self.drive_p, self.drive_i, self.drive_d, self.drive_val)
       #self.back_right.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor)
-
-
-      # Middle omni wheels are powered by Neo550 motors
-      self.middle_right = _middleRight
-      self.middle_left = _middleLeft
 
       # imu and pid stuff to be added below
       self.drive_imu = _drive_imu
@@ -114,18 +109,10 @@ class Drive:
 
       # if we end up using this in the future, tune steer using PID instead of just setting it to zero
 
-      # set middle wheel speeds to the average speed of the wheels on the respective sides
-      # utilizes the additional power that the middle wheels offer without interfering with mecanum drive (hopefully)
-      # might need to round down the avg values or set them to zero if they are in a small range close to 0
-      middle_left_speed = (front_left_speed + back_left_speed) / 2
-      middle_right_speed = (front_right_speed + back_right_speed) / 2
-
       self.front_left.set_speed(front_left_speed)
-      self.middle_left.set_speed(middle_left_speed)
       self.back_left.set_speed(back_left_speed)
 
       self.front_right.set_speed(front_right_speed)
-      self.middle_right.set_speed(middle_right_speed)
       self.back_right.set_speed(back_right_speed)
 
 

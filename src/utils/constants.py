@@ -44,13 +44,9 @@ ID_DRIVE_FRONT_LEFT = 2
 ID_DRIVE_BACK_LEFT = 3
 ID_DRIVE_BACK_RIGHT = 4
 
-ID_DRIVE_MIDDLE_RIGHT = 5
-ID_DRIVE_MIDDLE_LEFT = 6
-
-# FIX IDS
-ID_ARM_EXTENSION = 7 # replacing elevator
+ID_ARM_EXTENSION = 12 # replacing elevator
 ID_ARM_BASE = 8
-ID_ARM_CLAW = 9
+ID_ARM_CLAW = 15
 
 # not using the following three as of Battle of the Border (fall 2023)
 ID_ARM_SERVO_CUBE = 0

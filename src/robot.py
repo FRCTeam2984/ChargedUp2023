@@ -25,10 +25,6 @@ class MyRobot(wpilib.TimedRobot):
       self.back_left = ctre.WPI_TalonFX(constants.ID_DRIVE_BACK_LEFT)
       self.back_right = ctre.WPI_TalonFX(constants.ID_DRIVE_BACK_RIGHT)
 
-      # Middle omni wheels are powered by Neo550 motors
-      self.middle_right = rev.CANSparkMax(constants.ID_DRIVE_MIDDLE_RIGHT, rev.CANSparkMaxLowLevel.MotorType.kBrushless)
-      self.middle_left = rev.CANSparkMax(constants.ID_DRIVE_MIDDLE_LEFT, rev.CANSparkMaxLowLevel.MotorType.kBrushless)
-
       # imu and pid stuff to be added below
       # using the middle left motor, even though the middle right one can be used too
       self.imu_talon = ctre.WPI_TalonSRX(constants.ID_IMU_TALON)
@@ -43,14 +39,15 @@ class MyRobot(wpilib.TimedRobot):
       #self.arm_elevator_motor = rev.CANSparkMax(constants.ID_ARM_ELEVATOR, rev.CANSparkMaxLowLevel.MotorType.kBrushless)
       self.arm_base_motor = rev.CANSparkMax(constants.ID_ARM_BASE, rev.CANSparkMaxLowLevel.MotorType.kBrushless)
       self.arm_extension_motor = ctre.WPI_TalonSRX(constants.ID_ARM_EXTENSION)
-      
+      self.arm_extension_limit_switch = wpilib.DigitalInput(0)
       
       self.intake_motor = ctre.WPI_TalonSRX(constants.ID_ARM_CLAW)
       self.intake = intake.Intake(self.intake_motor)
+      self.intake_hold = False
 
-      self.drive = drive.Drive(self.front_left, self.front_right, self.middle_left, self.middle_right, self.back_left, self.back_right, self.drive_imu, self.pid)
+      self.drive = drive.Drive(self.front_left, self.front_right, self.back_left, self.back_right, self.drive_imu, self.pid)
       
-      self.arm = arm.Arm(self.arm_base_motor, self.arm_extension_motor, self.base_pid)
+      self.arm = arm.Arm(self.arm_base_motor, self.arm_extension_motor, self.arm_extension_limit_switch, self.base_pid)
       self.arm_desired_temp = 0
       
       self.balance = balance.Balance(self.drive, self.drive_imu)
@@ -120,10 +117,6 @@ class MyRobot(wpilib.TimedRobot):
 
       self.arm.base_encoder_zero = 0.12345
 
-      # maybe we need to reset the rotary controller angle in other places too
-      self.arm.open_cube_arm()
-      #self.arm.lift_cone_arm()
-
       self.rotary_controller.reset_angle(self.drive_imu.get_yaw())
 
       self.arm.base_desired_position = 10
@@ -139,90 +132,50 @@ class MyRobot(wpilib.TimedRobot):
 
       try:
          #print(f"base (z, p, d) = {self.arm.base_encoder_zero}, {self.arm.base_encoder_zero - self.arm.get_base_motor_encoder()}, {self.arm.base_desired_position}")
+         
+         if self.operator_controller.getRawButton(1):
+            self.intake.state = self.intake.INTAKING_CUBE
+            self.intake_hold = True
+
+         elif self.operator_controller.getRawButton(2):
+            self.intake.state = self.intake.INTAKING_CONE
+            self.intake_hold = True
+
+         elif self.operator_controller.getRawButton(3):
+            self.intake.state = self.intake.OUTTAKING
+            self.intake_hold = False
+
+         else:
+            if self.intake_hold:
+               self.intake.state = self.intake.HOLDING
+
+            else:
+               self.intake.state = self.intake.IDLE
+         
+         self.intake.update()
 
          if constants.ENABLE_ARM:
             arm_controller_position = self.drive_joystick.getRawAxis(2)
             #print(f"arm_controller_position = {arm_controller_position}")
 
             # get ready to pick up cube
-            if self.operator_controller.getRawButton(1):
-               self.intake.state = self.intake.INTAKING_CUBE
-
-            elif self.operator_controller.getRawButton(2):
-               self.intake.state = self.intake.INTAKING_CONE
-
-            elif self.operator_controller.getRawButton(3):
-               self.intake.state = self.intake.OUTTAKING
-
-            else:
-               if self.intake.state == self.intake.INTAKING_CUBE or self.intake.state == self.intake.INTAKING_CONE:
-                  self.intake.state = self.intake.HOLDING
-
-               else:
-                  self.intake.state = self.intake.IDLE
-
-            self.intake.update()
 
 
             # MAP TWO MORE BUTTONS FOR EXTENDING AND RETRACTING ARM EXTENSION
-            if self.operator_controller.getRawButton(5):
-               self.arm.set_extension_speed(0.15)
-
-            if self.operator_controller.getRawButton(6):
-               self.arm.set_extension_speed(-0.15)
-            """
-            if self.operator_controller.getRawButton(10):
-               constants.ARM_OVERRIDE = True
-
-               self.arm.base_desired_position = 9
-               self.arm.lower_cone_arm()
-               self.camera_led.set_led(128)
-
-               self.cone_pickup_state = self.CONE_GRABBING
             
-            elif self.cone_pickup_state == self.CONE_GRABBING:
-               self.camera_led.set_led(0)
-               self.arm.base_desired_position = 15
-               self.cone_pickup_state = self.CONE_IDLE
-               self.arm.lift_cone_arm()
+            print(self.arm_extension_limit_switch.get())
 
+            if self.arm_extension_limit_switch.get():
+               if self.operator_controller.getRawButton(5):
+                  self.arm.set_extension_speed(0.2)
 
-            if self.operator_controller.getRawButton(6):
-               constants.ARM_OVERRIDE = True
-
-               self.cube_dropoff_state = self.DROP_MOVING
-               self.arm.close_cube_arm()
-               self.arm.base_desired_position = 5
-            
-            elif self.operator_controller.getRawButton(5):
-               constants.ARM_OVERRIDE = True
-
-               self.cube_dropoff_state = self.DROP_MOVING
-               self.arm.close_cube_arm()
-               self.arm.base_desired_position = 10
-
-            elif self.operator_controller.getRawButton(4):
-               constants.ARM_OVERRIDE = True
-
-               self.cube_dropoff_state = self.DROP_MOVING
-               self.arm.close_cube_arm()
-               self.arm.base_desired_position = 22
-
-            elif self.cube_dropoff_state == self.DROP_MOVING:
-               constants.ARM_OVERRIDE = True
-
-               self.cube_dropoff_state = self.DROP_IDLE
-               self.arm.open_cube_arm()
-
-
-            if self.operator_controller.getRawButton(7):
-               self.intake.spin_in()
+               elif self.operator_controller.getRawButton(6):
+                  self.arm.set_extension_speed(-0.2)
 
             else:
-               self.intake.hold()
-
-            if self.operator_controller.getRawButton(8):
-               self.intake.spin_out()
+               self.arm.stop_extension()
+            
+      
 
 
             if self.operator_controller.getRawButton(12):
@@ -242,7 +195,7 @@ class MyRobot(wpilib.TimedRobot):
             
             else:
                self.auto_cube.state = self.auto_cube.IDLE
-         """
+         
             
          if not constants.ARM_OVERRIDE:
             if self.operator_controller.getRawButton(8):
