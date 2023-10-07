@@ -10,22 +10,19 @@ from utils import math_functions, pid
 # maybe we need to use PID in arm control to get accurate positions and hold it there
 
 class Arm:
-   def __init__(self, _arm_base_motor : CANSparkMax, _arm_extension_motor : WPI_TalonSRX, _arm_extension_limit_switch : DigitalInput, _base_pid : pid.PID):
+   def __init__(self, _arm_base_motor : CANSparkMax, _base_pid : pid.PID):
       self.arm_base_motor = _arm_base_motor
       self.base_encoder_zero = 0.12345
       self.base_desired_position = 0
       self.base_desired_position_slow = 0
       self.base_min_limit_switch = self.arm_base_motor.getForwardLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen)
       self.base_encoder = self.arm_base_motor.getEncoder(SparkMaxRelativeEncoder.Type.kHallSensor, 42)
-      self.base_encoder_in = 30
+      self.base_encoder_in = 105
       self.base_encoder_out = 3
       self.base_encoder_tolerance = 2
 
       self.base_pid = _base_pid
       self.base_pid.set_pid(0.1, 0.0016, 0.2, 0) 
-
-      self.arm_extension_motor = _arm_extension_motor
-      self.arm_extension_limit_switch = _arm_extension_limit_switch
 
       self.HOME = 0
       self.GROUND = 1
@@ -42,14 +39,6 @@ class Arm:
 
    def stop_base(self):
       self.arm_base_motor.set(0)
-
-
-   def set_extension_speed(self, speed):      
-      clamped_speed = math_functions.clamp(speed, -5, 5)
-      self.arm_extension_motor.set(clamped_speed)
-
-   def stop_extension(self):
-      self.arm_extension_motor.set(0)
 
    def set_intake_speed(self, speed):
       self.arm_claw_motor.set(speed)
@@ -68,22 +57,23 @@ class Arm:
       self.base_desired_position = desired_encoder_value
       actual_encoder = -self.get_base_motor_encoder() + self.base_encoder_zero
 
-      self.base_desired_position_slow += math_functions.clamp(-self.base_desired_position_slow + desired_encoder_value, -30/100, 30/100)
+      #self.base_desired_position_slow += math_functions.clamp(-self.base_desired_position_slow + desired_encoder_value, -30/100, 30/100)
       
 
-      error = self.base_desired_position_slow - actual_encoder
+      error = self.base_desired_position - actual_encoder
       adjustment = self.base_pid.keep_integral(error) * -1
-      adjustment = math_functions.clamp(adjustment, -0.25, 0.25)
+      adjustment = math_functions.clamp(adjustment, -0.6, 0.6)
 
       #print(f"base_error = {error}, base_adj = {adjustment}, actual_encoder = {actual_encoder}")
 
+      #print(f"motor power: {adjustment}, actual encoder: {actual_encoder}, desired encoder: {desired_encoder_value}, error: {error}")
       self.set_base_speed(adjustment)
 
    def calibrate_base(self):
       #print(f"base_limit_switch_touching = {self.base_encoder.get()}")
 
       if not self.base_min_limit_switch.get():
-         self.set_base_speed(0.17)
+         self.set_base_speed(0.25)
 
       else:
          base_limit_switch_value = self.get_base_motor_encoder()
