@@ -1,6 +1,6 @@
 import wpilib, rev, ctre
 import math
-from subsystems import arm, drive, networking, rotary_controller, camera_led, intake
+from subsystems import arm, drive, networking, rotary_controller, camera_led, intake, extension
 
 from utils import math_functions, constants, imutil, pid
 from commands import balance, cone, cube, autonomous
@@ -38,8 +38,10 @@ class MyRobot(wpilib.TimedRobot):
       # Motors and servos that control arm
       #self.arm_elevator_motor = rev.CANSparkMax(constants.ID_ARM_ELEVATOR, rev.CANSparkMaxLowLevel.MotorType.kBrushless)
       self.arm_base_motor = rev.CANSparkMax(constants.ID_ARM_BASE, rev.CANSparkMaxLowLevel.MotorType.kBrushless)
+      
       self.arm_extension_motor = ctre.WPI_TalonSRX(constants.ID_ARM_EXTENSION)
       self.arm_extension_limit_switch = wpilib.DigitalInput(0)
+      self.extension = extension.Extension(self.arm_extension_motor, self.arm_extension_limit_switch)
       
       self.intake_motor = ctre.WPI_TalonSRX(constants.ID_ARM_CLAW)
       self.intake = intake.Intake(self.intake_motor)
@@ -47,7 +49,7 @@ class MyRobot(wpilib.TimedRobot):
 
       self.drive = drive.Drive(self.front_left, self.front_right, self.back_left, self.back_right, self.drive_imu, self.pid)
       
-      self.arm = arm.Arm(self.arm_base_motor, self.arm_extension_motor, self.arm_extension_limit_switch, self.base_pid)
+      self.arm = arm.Arm(self.arm_base_motor, self.base_pid)
       self.arm_desired_temp = 0
       
       self.balance = balance.Balance(self.drive, self.drive_imu)
@@ -163,20 +165,18 @@ class MyRobot(wpilib.TimedRobot):
 
             # MAP TWO MORE BUTTONS FOR EXTENDING AND RETRACTING ARM EXTENSION
             
-            print(self.arm_extension_limit_switch.get())
+            # inverted, so limit switch is True if not pressed
+            if self.operator_controller.getRawButton(10):
+               self.arm.base_encoder_zero = 0.12345
 
-            if self.arm_extension_limit_switch.get():
-               if self.operator_controller.getRawButton(5):
-                  self.arm.set_extension_speed(0.2)
 
-               elif self.operator_controller.getRawButton(6):
-                  self.arm.set_extension_speed(-0.2)
+            #print(f"retracted: {self.arm_retracted}, extending: {self.arm_extending}")
+            extend_button = self.operator_controller.getRawButton(6)
+            retract_button = self.operator_controller.getRawButton(5)
+            self.extension.extend_retract(extend_button, retract_button)
 
-            else:
-               self.arm.stop_extension()
             
-      
-
+   
 
             if self.operator_controller.getRawButton(12):
                #self.network_receiver.dashboard.putBoolean("run_cube", False)
