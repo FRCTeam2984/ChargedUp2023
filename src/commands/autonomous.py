@@ -50,7 +50,7 @@ class Autonomous:
    def moving_left(self, drive_imu_init):
       self.drive.absolute_drive(0, -3.5, drive_imu_init, True, constants.DRIVE_MOTOR_POWER_MULTIPLIER)
 
-      print(f"drive_imu_init = {drive_imu_init}, imu yaw = {self.drive.drive_imu.get_yaw()}")
+      #print(f"drive_imu_init = {drive_imu_init}, imu yaw = {self.drive.drive_imu.get_yaw()}")
 
       if self.start_time + 5.5 < self.timer.getFPGATimestamp():
          return True
@@ -70,8 +70,6 @@ class Autonomous:
          return True
 
    def preparing(self):
-      self.arm.open_cube_arm()
-
       #print(f"start time = {self.start_time}, current time = {self.timer.getFPGATimestamp()}")
       if self.start_time + 3 < self.timer.getFPGATimestamp():
          return True
@@ -81,7 +79,7 @@ class Autonomous:
       if self.auto_stage == self.AUTO_IDLE:
             # check that we are good to start autonomous
             self.auto_stage = self.AUTO_PLACING_PIECE
-            self.arm.base_encoder_zero = self.arm.get_base_motor_encoder() + 10
+            self.arm.base_encoder_zero = self.arm.get_base_motor_encoder() + 15
             self.start_time = self.timer.getFPGATimestamp()
 
       elif self.auto_stage == self.AUTO_PLACING_PIECE:
