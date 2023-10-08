@@ -120,6 +120,11 @@ class Drive:
       speed = speed / 4
       left_right = left_right / 6
 
+      if abs(left_right) > abs(speed):
+         speed = 0
+      else:
+         left_right = 0
+
       #print(f"absolute drive speed = {speed}")
 
       # clamp the speed between -1 and 1 for safety purposes

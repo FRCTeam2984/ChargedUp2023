@@ -64,3 +64,4 @@ def interpolation_array(value, arr):
             if ((value>=arr[i+0][0]) and (value<=arr[i+1][0])): 
                   return (value-arr[i+0][0])*(arr[i+1][1]-arr[i+0][1])/(arr[i+1][0]-arr[i+0][0])+arr[i+0][1]
       return 0
+

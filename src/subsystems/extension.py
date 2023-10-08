@@ -27,9 +27,7 @@ class Extension:
    def retracted(self):
       return not self.arm_extension_limit_switch.get()
 
-   def extend_retract(self, extend_button, retract_button):
-      print(f"state: {self.state}")
-      
+   def extend_retract(self, extend_button, retract_button):      
       if self.state == self.RETRACTED:
          if extend_button:
             self.extension_start_time = self.timer.getFPGATimestamp()
